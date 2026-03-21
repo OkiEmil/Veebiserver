@@ -8,9 +8,8 @@ public class WebServer {
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
 
             while (true) { //just runs forever
-                //not really sure how to test it...
                 Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket); // used this as a reference https://www.geeksforgeeks.org/java/multithreaded-servers-in-java/
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
                 new Thread(clientHandler).start();
             }
         } catch (IOException e) {

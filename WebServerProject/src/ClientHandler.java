@@ -1,25 +1,23 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ClientHandler implements Runnable {
 
     private Socket connectionSocket;
-    private Map<String, String> requestMap;
     private Request httpRequest;
 
     public ClientHandler(Socket connectionSocket) {
         this.connectionSocket = connectionSocket;
-        this.requestMap = new HashMap<>();
     }
 
     private void parseRequest() throws IOException {
-        BufferedReader clientReader = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-        String requestLine = clientReader.readLine(); // the first line of the request
+        Map<String, String> requestMap = new HashMap<>();
+
+        InputStream clientInputStream = new BufferedInputStream(connectionSocket.getInputStream());
+        String requestLine = lineFromInputStream(clientInputStream); // the first line of the request
 
         if (requestLine != null) {
             String[] requestLineComponents = requestLine.split(" ");
@@ -35,14 +33,14 @@ public class ClientHandler implements Runnable {
             requestMap.put("Protocol", requestProtocol);
 
             // next come the headers
-            String headerLine = clientReader.readLine();
+            String headerLine = lineFromInputStream(clientInputStream);
             while (!headerLine.isEmpty()) {
-                String[] headerLineComponents = headerLine.split(": ");
+                String[] headerLineComponents = headerLine.split(": ", 2);
 
                 // toLowerCase() is required, since headers are not always of the same case
                 requestMap.put(headerLineComponents[0].toLowerCase(), headerLineComponents[1]);
 
-                headerLine = clientReader.readLine();
+                headerLine = lineFromInputStream(clientInputStream);
             }
 
             byte[] bodyBytes = null;
@@ -50,12 +48,11 @@ public class ClientHandler implements Runnable {
             String contentLengthString = requestMap.get("content-length");
             if (contentLengthString != null) {
                 int contentLength = Integer.parseInt(contentLengthString);
-                InputStream inputStream = connectionSocket.getInputStream();
                 bodyBytes = new byte[contentLength];
 
                 int alreadyReadBytesAmount = 0;
                 while (alreadyReadBytesAmount < contentLength) {
-                    int readThisTime = inputStream.read(bodyBytes, alreadyReadBytesAmount, contentLength-alreadyReadBytesAmount);
+                    int readThisTime = clientInputStream.read(bodyBytes, alreadyReadBytesAmount, contentLength-alreadyReadBytesAmount);
 
                     if (readThisTime == -1) {
                         break;
@@ -65,10 +62,38 @@ public class ClientHandler implements Runnable {
 
             }
             httpRequest = new Request(bodyBytes, requestMap);
-
+            System.out.println(httpRequest);
 
 
         }
+    }
+
+    private String lineFromInputStream(InputStream inputStream) throws IOException {
+        // https://stackoverflow.com/questions/1579823/buffered-reader-http-post
+
+
+        int byteRead = 0;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        while((byteRead = inputStream.read()) != -1) {
+            if (byteRead == '\r') { // or == 13
+                inputStream.mark(1); // next time read only one byte
+                int nextRead = inputStream.read();
+                if ( nextRead == '\n') {
+                    break;
+                } else {
+                    inputStream.reset(); // reset the mark
+                }
+            }
+            else if (byteRead == '\n') {
+                break;
+            }
+            else {
+                buffer.write(byteRead);
+            }
+
+        }
+
+        return buffer.toString(StandardCharsets.UTF_8);
     }
 
     @Override

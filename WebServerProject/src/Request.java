@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Map;
 
 public class Request {
@@ -14,6 +15,17 @@ public class Request {
         this.requestProtocol = requestMap.get("Protocol");
         this.bodyBytes = bodyBytes;
         this.headers = requestMap;
+    }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "requestMethod='" + requestMethod + '\'' +
+                ", requestResource='" + requestResource + '\'' +
+                ", requestProtocol='" + requestProtocol + '\'' +
+                ", bodyBytes=" + new String(bodyBytes) +
+                ", headers=" + headers +
+                '}';
     }
 
     public String getRequestMethod() {
