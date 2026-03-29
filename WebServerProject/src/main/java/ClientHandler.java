@@ -7,16 +7,31 @@ import java.util.Map;
 public class ClientHandler implements Runnable {
 
     private Socket connectionSocket;
-    private Request httpRequest;
 
     public ClientHandler(Socket connectionSocket) {
         this.connectionSocket = connectionSocket;
     }
 
-    private void parseRequest() throws IOException {
-        Map<String, String> requestMap = new HashMap<>();
+    @Override
+    public void run() {
+        try {
+            InputStream inputStream = connectionSocket.getInputStream();
+            OutputStream outputStream = connectionSocket.getOutputStream();
 
-        InputStream clientInputStream = new BufferedInputStream(connectionSocket.getInputStream());
+            Request httpRequest = parseRequest(inputStream);
+            Response httpResponse = handleRequest(httpRequest);
+
+            outputStream.write(httpResponse.getResponseAsBytes());
+            this.connectionSocket.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private Request parseRequest(InputStream inputStream) throws IOException {
+        HashMap<String, String> requestMap = new HashMap<>();
+
+        InputStream clientInputStream = new BufferedInputStream(inputStream);
         String requestLine = lineFromInputStream(clientInputStream); // the first line of the request
 
         if (requestLine != null) {
@@ -61,11 +76,14 @@ public class ClientHandler implements Runnable {
                 }
 
             }
-            httpRequest = new Request(bodyBytes, requestMap);
+            Request httpRequest = new Request(bodyBytes, requestMap);
             System.out.println(httpRequest);
+            return httpRequest;
+
 
 
         }
+        return null;
     }
 
     private String lineFromInputStream(InputStream inputStream) throws IOException {
@@ -90,22 +108,20 @@ public class ClientHandler implements Runnable {
             else {
                 buffer.write(byteRead);
             }
-
         }
 
         return buffer.toString(StandardCharsets.UTF_8);
     }
 
-    @Override
-    public void run() {
-        try {
-            parseRequest();
+    public Response handleRequest(Request request) {
 
-            this.connectionSocket.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        // Decide how to handle different requests (GET, POST, DELETE, etc..)
+
+        return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
+                .setStatus(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED)
+                .build();
     }
+
 
 
 }

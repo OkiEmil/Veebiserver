@@ -1,20 +1,17 @@
-import java.util.Arrays;
-import java.util.Map;
+import java.util.HashMap;
 
-public class Request {
+public class Request extends HttpMessage {
 
     private String requestMethod;
     private String requestResource;
     private String requestProtocol;
-    private byte[] bodyBytes;
-    private Map<String, String> headers;
 
-    public Request(byte[] bodyBytes, Map<String, String> requestMap) {
+    public Request(byte[] bodyBytes, HashMap<String, String> requestMap) {
         this.requestMethod = requestMap.get("Method");
         this.requestResource = requestMap.get("Resource");
         this.requestProtocol = requestMap.get("Protocol");
-        this.bodyBytes = bodyBytes;
-        this.headers = requestMap;
+        this.setMessageBody(bodyBytes);
+        this.setHeaders(requestMap);
     }
 
     @Override
@@ -23,8 +20,8 @@ public class Request {
                 "requestMethod='" + requestMethod + '\'' +
                 ", requestResource='" + requestResource + '\'' +
                 ", requestProtocol='" + requestProtocol + '\'' +
-                ", bodyBytes=" + new String(bodyBytes) +
-                ", headers=" + headers +
+                ", bodyBytes=" + new String(getMessageBody()) +
+                ", headers=" + getHeaderNames() +
                 '}';
     }
 
@@ -40,11 +37,4 @@ public class Request {
         return requestProtocol;
     }
 
-    public byte[] getBodyBytes() {
-        return bodyBytes;
-    }
-
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
 }

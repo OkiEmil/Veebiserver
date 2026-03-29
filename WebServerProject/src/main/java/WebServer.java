@@ -4,7 +4,7 @@ import java.net.Socket;
 
 
 public class WebServer {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
 
             while (true) { //just runs forever
