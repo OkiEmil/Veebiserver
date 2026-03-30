@@ -36,7 +36,7 @@ public class ClientHandler implements Runnable {
 
         if (requestLine != null) {
             String[] requestLineComponents = requestLine.split(" ");
-
+            System.out.println(requestLine);
             // for example POST /contact_form.php HTTP/1.1
             String requestMethod = requestLineComponents[0];
             String requestResource = requestLineComponents[1];
@@ -47,7 +47,7 @@ public class ClientHandler implements Runnable {
             requestMap.put("Resource", requestResource);
             requestMap.put("Protocol", requestProtocol);
 
-            // next come the headers
+            // the headers
             String headerLine = lineFromInputStream(clientInputStream);
             while (!headerLine.isEmpty()) {
                 String[] headerLineComponents = headerLine.split(": ", 2);
@@ -102,15 +102,15 @@ public class ClientHandler implements Runnable {
                     inputStream.reset(); // reset the mark
                 }
             }
-            else if (byteRead == '\n') {
+           /* else if (byteRead == '\n') {
                 break;
-            }
+            }*/
             else {
                 buffer.write(byteRead);
             }
         }
 
-        return buffer.toString(StandardCharsets.UTF_8);
+        return buffer.toString(StandardCharsets.US_ASCII);
     }
 
     public Response handleRequest(Request request) {

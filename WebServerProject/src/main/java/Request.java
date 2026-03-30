@@ -10,7 +10,10 @@ public class Request extends HttpMessage {
         this.requestMethod = requestMap.get("Method");
         this.requestResource = requestMap.get("Resource");
         this.requestProtocol = requestMap.get("Protocol");
-        this.setMessageBody(bodyBytes);
+        if (bodyBytes != null) {
+            this.setMessageBody(bodyBytes);
+        }
+
         this.setHeaders(requestMap);
     }
 
