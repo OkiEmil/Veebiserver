@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.time.LocalDate;
 
 public class FileHandler
 {
@@ -66,6 +67,7 @@ public class FileHandler
 		catch(IOException exception)
 		{
 			//TODO: add exception to log.
+			logger.log("Failed to create file: " + path + " with exception: " + exception.getLocalizedMessage(), true);
 			return false;
 		}
 		
@@ -82,6 +84,7 @@ public class FileHandler
 		catch(IOException exception)
 		{
 			//TODO: add exception to log.
+			logger.log("Failed to delete file: " + path + " with exception: " + exception.getLocalizedMessage(), true);
 			return false;
 		}
 	}
@@ -97,6 +100,7 @@ public class FileHandler
 		catch(IOException exception)
 		{
 			//TODO: add exception to log.
+			logger.log("Failed to create directory: " + path + " witht exception:" + exception.getLocalizedMessage(), true);
 			return false;
 		}
 	}
@@ -114,8 +118,12 @@ public class FileHandler
 	// Singleton instance.
 	private static FileHandler instance;
 
+	private static Logger logger;
+
 	private FileHandler()
 	{
+		logger = new Logger("FileHandler.log_" + LocalDate.now().toString() + ".txt");
+
 		try
 		{
 			baseUserPath = Path.of("").toRealPath();
@@ -123,6 +131,7 @@ public class FileHandler
 		catch(Exception exception)
 		{
 			//TODO: add exception to log and terminate program.
+			logger.log("Failed to get real path of current directory: " + exception.getLocalizedMessage(), true);
 		}
 	}
 
@@ -152,6 +161,7 @@ public class FileHandler
 		catch(Exception exception)
 		{
 			// TODO: Add exception to log.
+			logger.log("Failed to read string from file:" + path + " with exception:" + exception.getLocalizedMessage(), true); 
 			return new String();
 		}
 	}
@@ -179,6 +189,7 @@ public class FileHandler
 		catch(Exception exception)
 		{
 			//TODO: Add to log.
+			logger.log("Failed to read lines from file:" + path + " with exception:" + exception.getLocalizedMessage(), true); 
 			return null;
 		}
 	}
@@ -195,6 +206,7 @@ public class FileHandler
 		catch(Exception exception)
 		{
 			// TODO: Add exception to log.
+			logger.log("Failed to write content to file:" + path + " with exception:" + exception.getLocalizedMessage(), true); 
 			return false;
 		}
 	}
@@ -212,6 +224,7 @@ public class FileHandler
 		catch(Exception exception)
 		{
 			//TODO: add exception to log.
+			logger.log("Failed to write lines to file:" + path + " with exception:" + exception.getLocalizedMessage(), true); 
 			return false;
 		}
 	}
