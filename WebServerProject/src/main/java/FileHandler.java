@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
@@ -38,7 +39,7 @@ public class FileHandler
 
 	public boolean writeLinesToFile(String path, List<String> lines)
 	{
-		return writeLinesToFile(path, lines);
+		return writeLinesToFileImpl(path, lines);
 	}
 
 	/*public boolean writeBytesToFile(String path, byte[] bytes)
@@ -90,7 +91,7 @@ public class FileHandler
 		try
 		{
 			Path directoryName = Path.of(path);
-			Files.createDirectory(directoryName, null, null);
+			Files.createDirectory(directoryName);
 			return true;
 		}
 		catch(IOException exception)
@@ -161,7 +162,7 @@ public class FileHandler
 
 		try
 		{
-			List<String> out = new List<>();
+			List<String> out = new ArrayList<>();
 
 			reader = new BufferedReader(new FileReader(path));
 			String line = reader.readLine();
@@ -187,7 +188,7 @@ public class FileHandler
 		try
 		{
 			Path fileName = Path.of(path);
-			Files.writeString(fileName, content);
+			Files.writeString(fileName, content, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
 			return true;
 		}
