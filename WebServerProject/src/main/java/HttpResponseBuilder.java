@@ -6,6 +6,7 @@ public class HttpResponseBuilder {
     public HttpResponseBuilder() {
         this.response = new Response();
     }
+    public HttpResponseBuilder(Response response) {this.response = response;}
     public HttpResponseBuilder setStatus(HttpStatus status) {
         this.response.setHttpStatus(status);
         return this;
