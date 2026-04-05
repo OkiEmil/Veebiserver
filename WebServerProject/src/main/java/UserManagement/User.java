@@ -1,16 +1,19 @@
 package UserManagement;
 
-public class User {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
+
+public class User implements Serializable {
+    @JsonProperty("username")
     private String username;
+    @JsonProperty("salt")
     private String salt;
+    @JsonProperty("hashedPassword")
     private String hashedPassword;
     // hiljem lisa createdAt
 
-    public User(String username, String salt, String hashedPassword) {
-        this.username = username;
-        this.salt = salt;
-        this.hashedPassword = hashedPassword;
-    }
+    public User() {}
 
     public String getUsername() {
         return username;
@@ -19,6 +22,7 @@ public class User {
     public void setUserName(String userName) {
         this.username = userName;
     }
+
     public String getSalt() {
         return salt;
     }
@@ -26,11 +30,17 @@ public class User {
     public void setSalt(String salt) {
         this.salt = salt;
     }
+
     public String getHashedPassword() {
         return hashedPassword;
     }
 
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
+    }
+
+    @Override
+    public String toString() {
+        return "User "+ username;
     }
 }

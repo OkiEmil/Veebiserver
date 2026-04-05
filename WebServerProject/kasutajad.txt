@@ -1,2 +1,0 @@
-kasutaja1; soolfd1; saltedparoolihash
-kasutaja2; soolr12; saltedparoolihash2
