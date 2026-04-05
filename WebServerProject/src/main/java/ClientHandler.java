@@ -5,6 +5,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.RSAOtherPrimeInfo;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class ClientHandler implements Runnable {
@@ -151,11 +152,29 @@ public class ClientHandler implements Runnable {
     }
 
     public Response handleRequest(Request request) {
+        try {
+            // Decide how to better handle different requests (GET, POST, DELETE, etc..)
+            String method = request.getHeader("Method");
+            if (method.equalsIgnoreCase("GET")) {
+                GetRequestHandler getHandler = new GetRequestHandler();
+                return getHandler.handleRequest(request);
+            }
+            if (method.equalsIgnoreCase("HEAD")) {
+                HeadRequestHandler headHandler = new HeadRequestHandler();
+                return headHandler.handleRequest(request);
+            }
 
-        // Decide how to handle different requests (GET, POST, DELETE, etc..)
-        return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
-                .setStatus(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED)
-                .build();
+
+            return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
+                    .setStatus(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED)
+                    .setBody(("method" + method + " not implemented").getBytes())
+                    .build();
+        } catch (Exception e) {
+            return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
+                    .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
+                    .build();
+        }
+
     }
 
 

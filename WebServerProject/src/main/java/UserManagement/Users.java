@@ -35,7 +35,7 @@ public class Users {
     }
 
     /**
-     * Laeb kasutajate HashMapi failist mällu serveri käivitamisel
+     * Loads the user data into memory upon starting the server
      */
     private void mapUsersFromFile() {
         File file = new File(this.usersFilePath); // filePath is a String
@@ -58,9 +58,9 @@ public class Users {
     }
 
     /**
-     * Kasulik kasutaja leidmiseks
-     * @param username Kasutajanimi
-     * @return kasutaja (get meetoditega), null - ei eksisteeri
+     * Returns the user from the hashmap
+     * @param username Username
+     * @return User, null - Does not exist
      */
     public User findUser(String username) {
         if (userMap.containsKey(username))
@@ -69,10 +69,10 @@ public class Users {
     }
 
     /**
-     * Autenteerimisel tagastab, kas saab sisse logida (võrdleb parooli salvestatuga)
-     * @param username Kasutajanimi
-     * @param receivedPassword Sissetulev parool
-     * @return kas saab sisse logida
+     * Authenticates the user
+     * @param username User's username
+     * @param receivedPassword Incoming password
+     * @return Can the user login
      */
     public synchronized boolean isPasswordCorrect(String username,String receivedPassword) {
         String salt = this.userMap.get(username).getSalt();
@@ -81,11 +81,11 @@ public class Users {
     }
 
     /**
-     * Lisab kasutaja süsteemi
-     * @param username Kasutaja kasutajanimi
-     * @param password Kasutaja parool
-     * @return false - Kasutaja juba eksisteerib või kasutaja loomine ebaõnnestus,
-     *         true - kasutaja lisati süsteemi
+     * Adds the user to the system
+     * @param username User's username
+     * @param password User's password
+     * @return false - User already exists or user registering failed,
+     *         true - user has been added to the system
      */
     public synchronized boolean addUser(String username, String password)  {
         if ((findUser(username))!=null) {
@@ -98,31 +98,31 @@ public class Users {
         user.setSalt(salt);
         user.setHashedPassword(hashedSaltedPassword);
 
-        this.userMap.put(username, user); // lisab kasutaja andmed faili, hashmappi
+        this.userMap.put(username, user);
         appendUserToFile(user);
         return true;
     }
 
 
     /**
-     * Lisab serveri jooksmise ajal kasutaja faili (et ei peaks tervet faili korraga ümber kirjutama iga väikese muudatusega)
-     * @param user Faili lisatav kasutaja
+     * Adds the user to the file while the server is running (saves time on writing)
+     * @param user User that is to be added to the file
      */
     private synchronized void appendUserToFile(User user) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(usersFilePath, StandardCharsets.UTF_8, true))) {
             writer.write(mapper.writeValueAsString(user));
             writer.newLine();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to append user to file", e); // tuleb midagi korralikku ette võtta
+            throw new RuntimeException("Failed to add user "+user.getUsername() + " data to file", e); // TODO
         }
     }
 
 
     /**
-     * Salvestab andmed faili, peaks enne serveri kinni panemist käivitama.
-     * On atomic, st, et kõik tegevused tehakse korraga, ei korrupeeri faili
+     * Saves user data into a file, should be run when the server shuts down.
+     * Is automatic, does not corrupt the user data file
      */
-    public synchronized void saveUsersToFIle() {
+    public synchronized void saveUsersToFIle() { // TODO: do it so this runs when the server shuts down
         Path temp = Paths.get(this.usersFilePath + ".tmp");
         Path original = Paths.get(this.usersFilePath);
 

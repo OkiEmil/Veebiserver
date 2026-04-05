@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Map;
 
 // TODO: add logging
 
@@ -12,7 +13,9 @@ public class GetRequestHandler extends RequestHandler {
     protected Response handleRequest(Request request) {
 
         try {
-            if (!FileHandler.getInstance().fileExists(request.getRequestResource())) {
+            String resource= request.getRequestResource();
+
+            if (!FileHandler.getInstance().fileExists(resource)) {
                 return new HttpResponseBuilder()
                         .setHttpVersion(request.getRequestProtocol())
                         .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)

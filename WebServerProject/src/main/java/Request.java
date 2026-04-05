@@ -40,4 +40,5 @@ public class Request extends HttpMessage {
         return requestProtocol;
     }
 
+    // TODO add params method (might actually be in PostRequestHandler)
 }
