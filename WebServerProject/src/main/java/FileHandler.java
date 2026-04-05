@@ -105,6 +105,14 @@ public class FileHandler
 		}
 	}
 
+	public String getMimeType(String path) throws IOException{
+		return getMimeTypeImpl(path);
+	}
+
+	public long getFileSize(String path) throws IOException {
+		return getFileSizeImpl(path);
+	}
+
 
 	// DO NOT EXPOSE IT TO OUTER CLASSES!
 	private HashSet<Path> userAllowedPaths = new HashSet<Path>();
@@ -226,6 +234,31 @@ public class FileHandler
 			//TODO: add exception to log.
 			logger.log("Failed to write lines to file:" + path + " with exception:" + exception.getLocalizedMessage(), true); 
 			return false;
+		}
+	}
+
+	private String getMimeTypeImpl(String path) throws IOException
+	{
+		try {
+			Path fileName = Path.of(path);
+			String mimeType = Files.probeContentType(fileName);
+
+			if (mimeType == null) return "application/octet-stream"; // undetermined filetype
+			return mimeType;
+		} catch (IOException exception){
+			logger.log("Failed to fetch MIME type for " + path + " with exception:" + exception.getLocalizedMessage(), true);
+			throw new IOException();
+		}
+	}
+
+	private long getFileSizeImpl(String path) throws IOException
+	{
+		try {
+			Path fileName = Path.of(path);
+			return Files.size(fileName);
+		} catch (IOException exception) {
+			logger.log("Failed to fetch FileSize for " + path + " with exception: " + exception.getLocalizedMessage(), true);
+			throw new IOException();
 		}
 	}
 }
