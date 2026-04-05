@@ -4,7 +4,11 @@ import java.time.format.DateTimeFormatter;
 
 public abstract class RequestHandler {
 
-    private static String HANDLER_METHOD;
+    private final String HANDLER_METHOD;
+
+    public RequestHandler(String handlerMethod) {
+        this.HANDLER_METHOD = handlerMethod;
+    }
 
     protected Response handleRequest(Request request) {
         HttpResponseBuilder responseBuilder = new HttpResponseBuilder()

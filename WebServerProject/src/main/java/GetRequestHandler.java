@@ -4,7 +4,9 @@ import java.io.IOException;
 
 public class GetRequestHandler extends RequestHandler {
 
-    private final String HANDLER_METHOD = "GET";
+    public GetRequestHandler() {
+        super("GET");
+    }
 
     @Override
     protected Response handleRequest(Request request) {

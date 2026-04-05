@@ -2,7 +2,9 @@ import java.io.IOException;
 
 public class HeadRequestHandler extends RequestHandler{
 
-    private final String HANDLER_METHOD = "HEAD";
+    public HeadRequestHandler() {
+        super("HEAD");
+    }
 
     @Override
     protected Response handleRequest(Request request) {
