@@ -29,7 +29,7 @@ public class PasswordUtils {
             throw new RuntimeException(e); // tuleb midagi normaalset ette võtta !!!
         }
     }
-    public synchronized static boolean isPasswordCorrect(String receivedPassword, String salt, String savedPasswordHash) {
+    public static boolean isPasswordCorrect(String receivedPassword, String salt, String savedPasswordHash) {
         return stringToHash(receivedPassword+salt).equals(savedPasswordHash);
     }
 
