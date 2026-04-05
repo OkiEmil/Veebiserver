@@ -1,6 +1,9 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.security.spec.RSAOtherPrimeInfo;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,38 +17,68 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
+
         try {
-            InputStream inputStream = connectionSocket.getInputStream();
+            connectionSocket.setSoTimeout(5000); // end the connection automatically after 5 seconds of not getting anything
+            boolean keepConnection = true;
+            BufferedInputStream inputStream = new BufferedInputStream(connectionSocket.getInputStream());
             OutputStream outputStream = connectionSocket.getOutputStream();
+            while (keepConnection) {
 
-            Request httpRequest = parseRequest(inputStream);
-            Response httpResponse = handleRequest(httpRequest);
+                try {
 
-            outputStream.write(httpResponse.getResponseAsBytes());
-            this.connectionSocket.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+                    Request httpRequest = parseRequest(inputStream);
+                    if (httpRequest == null) {
+                        break;
+                    } else if ("close".equalsIgnoreCase(httpRequest.getHeader("connection"))) {
+                        keepConnection = false;
+                    }
+                    Response httpResponse = handleRequest(httpRequest);
+                    outputStream.write(httpResponse.getResponseAsBytes());
+                    outputStream.flush();
+                } catch (SocketTimeoutException e){
+                    keepConnection = false;
+                }
+            }
+
+        } catch (Exception ex) {
+            if (!(ex instanceof SocketException)) {
+
+                // TODO - implement a way to give a response of the error instead of this
+                ex.printStackTrace();
+            }
+        }
+        finally {
+            try {
+                this.connectionSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private Request parseRequest(InputStream inputStream) throws IOException {
+    private Request parseRequest(BufferedInputStream clientInputStream) throws IOException, HttpParsingException {
         HashMap<String, String> requestMap = new HashMap<>();
-
-        InputStream clientInputStream = new BufferedInputStream(inputStream);
         String requestLine = lineFromInputStream(clientInputStream); // the first line of the request
+        System.out.println(requestLine);
+        // for example POST /contact_form.php HTTP/1.1
 
-        if (requestLine != null) {
+        if (requestLine == null || requestLine.trim().isEmpty()) {
+            return null;
+        }
+
+
+        try {
             String[] requestLineComponents = requestLine.split(" ");
-            System.out.println(requestLine);
-            // for example POST /contact_form.php HTTP/1.1
-            String requestMethod = requestLineComponents[0];
-            String requestResource = requestLineComponents[1];
-            String requestProtocol = requestLineComponents[2];
 
-            // make it easier to access the request info
-            requestMap.put("Method", requestMethod);
-            requestMap.put("Resource", requestResource);
-            requestMap.put("Protocol", requestProtocol);
+
+                String requestMethod = requestLineComponents[0];
+                String requestResource = requestLineComponents[1];
+                String requestProtocol = requestLineComponents[2];
+                requestMap.put("Method", requestMethod);
+                requestMap.put("Resource", requestResource);
+                requestMap.put("Protocol", requestProtocol);
+
 
             // the headers
             String headerLine = lineFromInputStream(clientInputStream);
@@ -79,20 +112,20 @@ public class ClientHandler implements Runnable {
             Request httpRequest = new Request(bodyBytes, requestMap);
             System.out.println(httpRequest);
             return httpRequest;
+            } catch (Exception e) {
+                throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
+            }
 
-
-
-        }
-        return null;
     }
 
     private String lineFromInputStream(InputStream inputStream) throws IOException {
         // https://stackoverflow.com/questions/1579823/buffered-reader-http-post
 
-
         int byteRead = 0;
+        boolean hasReadAnything = false;
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         while((byteRead = inputStream.read()) != -1) {
+            hasReadAnything = true;
             if (byteRead == '\r') { // or == 13
                 inputStream.mark(1); // next time read only one byte
                 int nextRead = inputStream.read();
@@ -102,21 +135,24 @@ public class ClientHandler implements Runnable {
                     inputStream.reset(); // reset the mark
                 }
             }
-           /* else if (byteRead == '\n') {
+            else if (byteRead == '\n') {
                 break;
-            }*/
-            else {
+            } else {
                 buffer.write(byteRead);
             }
         }
+        if (!hasReadAnything) {
+            return null;
+        }
 
-        return buffer.toString(StandardCharsets.US_ASCII);
+        return buffer.toString(StandardCharsets.ISO_8859_1);
+
+
     }
 
     public Response handleRequest(Request request) {
 
         // Decide how to handle different requests (GET, POST, DELETE, etc..)
-
         return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
                 .setStatus(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED)
                 .build();

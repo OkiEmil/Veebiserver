@@ -40,7 +40,7 @@ public class Response extends HttpMessage {
 
         byte[] responseBytes = stringFromResponse.toString().getBytes(StandardCharsets.UTF_8);
 
-        if (getHeader("body-length") == null || getMessageBody().length == 0) {
+        if (getHeader("content-length").equals("0") || getMessageBody().length == 0) {
             return responseBytes;
         }
 

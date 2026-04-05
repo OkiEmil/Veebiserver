@@ -16,7 +16,7 @@ public class HttpResponseBuilder {
     }
     public HttpResponseBuilder setBody(byte[] body) {
         this.response.setMessageBody(body);
-        return this.addHeader("Content-Length", String.valueOf(body.length));
+        return this.addHeader("content-length", String.valueOf(body.length));
     }
     public HttpResponseBuilder addHeader(String headerName, String headerField) {
         this.response.addHeader(headerName, headerField);
@@ -27,6 +27,9 @@ public class HttpResponseBuilder {
         return this;
     }
     public Response build() {
+        if (response.getHeader("content-length") == null) {
+            addHeader("content-length", "0");
+        }
         return response;
     }
 
