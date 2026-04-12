@@ -2,15 +2,16 @@ import java.io.IOException;
 
 public class HeadRequestHandler extends RequestHandler{
 
-    public HeadRequestHandler() {
-        super("HEAD");
+    public HeadRequestHandler(WebrootHandler webrootHandler) {
+        super("HEAD", webrootHandler);
     }
 
     @Override
     protected Response handleRequest(Request request) {
 
         try {
-            if (!FileHandler.getInstance().fileExists(request.getRequestResource())) {
+            String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
+            if (!FileHandler.getInstance().fileExists(resource)) {
                 return new HttpResponseBuilder()
                         .setHttpVersion(request.getRequestProtocol())
                         .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
@@ -18,8 +19,8 @@ public class HeadRequestHandler extends RequestHandler{
             }
 
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
-                    .addHeader("Content-type", FileHandler.getInstance().getMimeType(request.getRequestResource()))
-                    .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(request.getRequestResource())));
+                    .addHeader("Content-type", FileHandler.getInstance().getMimeType(resource))
+                    .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(resource)));
 
             return responseBuilder.build();
 
