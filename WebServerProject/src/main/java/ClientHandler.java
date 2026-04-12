@@ -11,9 +11,11 @@ import java.util.Map;
 public class ClientHandler implements Runnable {
 
     private Socket connectionSocket;
+    private WebrootHandler webrootHandler;
 
     public ClientHandler(Socket connectionSocket) {
         this.connectionSocket = connectionSocket;
+        this.webrootHandler = new WebrootHandler("public");
     }
 
     @Override
