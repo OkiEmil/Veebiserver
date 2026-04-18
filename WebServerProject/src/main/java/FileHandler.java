@@ -28,10 +28,11 @@ public class FileHandler
 		//return null;
 	}
 
-	/*public byte[] readFileAsBytes(String path)
+	public byte[] readFileAsBytes(String path)
 	{
-		return new byte[0];
-	}*/
+		return readFileAsBytesImpl(path);
+		//return new byte[0];
+	}
 
 	public boolean writeStringToFile(String path, String content)
 	{
@@ -43,10 +44,11 @@ public class FileHandler
 		return writeLinesToFileImpl(path, lines);
 	}
 
-	/*public boolean writeBytesToFile(String path, byte[] bytes)
+	public boolean writeBytesToFile(String path, byte[] bytes)
 	{
-		return false;
-	}*/
+		return writeBytesToFileImpl(path, bytes);
+		//return false;
+	}
 
 	public boolean fileExists(String path)
 	{
@@ -259,6 +261,34 @@ public class FileHandler
 		} catch (IOException exception) {
 			logger.log("Failed to fetch FileSize for " + path + " with exception: " + exception.getLocalizedMessage(), true);
 			throw new IOException();
+		}
+	}
+
+	private byte[] readFileAsBytesImpl(String path)
+	{
+		try {
+			Path fileName = Path.of(path);
+			return Files.readAllBytes(fileName);
+		}
+		catch(Exception exception)
+		{
+			logger.log("Failed to read bytes from file: " + path + " with exception: " + exception.getLocalizedMessage(), true);
+			return new byte[0];
+		}
+	}
+
+	private boolean writeBytesToFileImpl(String path, byte[] bytes)
+	{
+		try
+		{
+			Path fileName = Path.of(path);
+			Files.write(fileName, bytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+			return true;
+		}
+		catch(Exception exception)
+		{
+			logger.log("Failed to write bytes to file: " + path + " with exception: " + exception.getLocalizedMessage(), true);
+			return false;
 		}
 	}
 }
