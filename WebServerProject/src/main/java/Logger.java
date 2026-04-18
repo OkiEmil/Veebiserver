@@ -18,7 +18,9 @@ public class Logger
 			String dateTime = LocalDate.now().toString();
 			logPath = logPath + "_" + dateTime + ".log";
 			logFilePath = Path.of(logPath);
-			Files.createFile(logFilePath);
+
+			if(Files.exists(Path.of(logPath), null))
+				Files.createFile(logFilePath);
 		}
 		catch(Exception exception)
 		{

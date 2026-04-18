@@ -1,4 +1,6 @@
-public class FilePayload 
+import java.io.*;
+
+public class FilePayload implements Serializable
 {
     public String fileName;
     public String mimeType;

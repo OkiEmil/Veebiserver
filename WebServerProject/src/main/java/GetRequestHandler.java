@@ -5,12 +5,18 @@ import java.util.Map;
 
 public class GetRequestHandler extends RequestHandler {
 
+    //Logger logger;
+
     public GetRequestHandler(WebrootHandler webrootHandler) {
         super("GET", webrootHandler);
+
+        //logger = new Logger("GetRequestHandler");
     }
 
     @Override
     protected Response handleRequest(Request request) {
+
+        //logger.log("Trying to handle get request.", true);
 
         try {
             String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
@@ -30,6 +36,7 @@ public class GetRequestHandler extends RequestHandler {
             return responseBuilder.build();
 
         } catch (IOException e) {
+            //logger.log("Failed to handle log request.", true);
             return new HttpResponseBuilder()
                     .setHttpVersion(request.getRequestProtocol())
                     .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
