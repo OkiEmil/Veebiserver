@@ -5,15 +5,15 @@ import java.util.Map;
 
 public class GetRequestHandler extends RequestHandler {
 
-    public GetRequestHandler() {
-        super("GET");
+    public GetRequestHandler(WebrootHandler webrootHandler) {
+        super("GET", webrootHandler);
     }
 
     @Override
     protected Response handleRequest(Request request) {
 
         try {
-            String resource= request.getRequestResource();
+            String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
 
             if (!FileHandler.getInstance().fileExists(resource)) {
                 return new HttpResponseBuilder()
@@ -23,9 +23,9 @@ public class GetRequestHandler extends RequestHandler {
             }
 
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
-                    .addHeader("Content-type", FileHandler.getInstance().getMimeType(request.getRequestResource()))
-                    .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(request.getRequestResource())))
-                    .setBody(new byte[0]); // PLACEHOLDER
+                    .addHeader("Content-type", FileHandler.getInstance().getMimeType(resource))
+                    .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(resource)))
+                    .setBody(getWEBROOT_HANDLER().getByteArray(request.getRequestResource())); // PLACEHOLDER
 
             return responseBuilder.build();
 

@@ -11,9 +11,11 @@ import java.util.Map;
 public class ClientHandler implements Runnable {
 
     private Socket connectionSocket;
+    private WebrootHandler webrootHandler;
 
     public ClientHandler(Socket connectionSocket) {
         this.connectionSocket = connectionSocket;
+        this.webrootHandler = new WebrootHandler("public");
     }
 
     @Override
@@ -29,6 +31,7 @@ public class ClientHandler implements Runnable {
                 try {
 
                     Request httpRequest = parseRequest(inputStream);
+
                     if (httpRequest == null) {
                         break;
                     } else if ("close".equalsIgnoreCase(httpRequest.getHeader("connection"))) {
@@ -61,7 +64,6 @@ public class ClientHandler implements Runnable {
     private Request parseRequest(BufferedInputStream clientInputStream) throws IOException, HttpParsingException {
         HashMap<String, String> requestMap = new HashMap<>();
         String requestLine = lineFromInputStream(clientInputStream); // the first line of the request
-        System.out.println(requestLine);
         // for example POST /contact_form.php HTTP/1.1
 
         if (requestLine == null || requestLine.trim().isEmpty()) {
@@ -76,9 +78,9 @@ public class ClientHandler implements Runnable {
                 String requestMethod = requestLineComponents[0];
                 String requestResource = requestLineComponents[1];
                 String requestProtocol = requestLineComponents[2];
-                requestMap.put("Method", requestMethod);
-                requestMap.put("Resource", requestResource);
-                requestMap.put("Protocol", requestProtocol);
+                requestMap.put("method", requestMethod);
+                requestMap.put("resource", requestResource);
+                requestMap.put("protocol", requestProtocol);
 
 
             // the headers
@@ -111,7 +113,6 @@ public class ClientHandler implements Runnable {
 
             }
             Request httpRequest = new Request(bodyBytes, requestMap);
-            System.out.println(httpRequest);
             return httpRequest;
             } catch (Exception e) {
                 throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
@@ -152,15 +153,16 @@ public class ClientHandler implements Runnable {
     }
 
     public Response handleRequest(Request request) {
+        System.out.println("Handling: " + request.getHeader("method") + " method for resource " + request.getRequestResource());
         try {
             // Decide how to better handle different requests (GET, POST, DELETE, etc..)
-            String method = request.getHeader("Method");
+            String method = request.getHeader("method");
             if (method.equalsIgnoreCase("GET")) {
-                GetRequestHandler getHandler = new GetRequestHandler();
+                GetRequestHandler getHandler = new GetRequestHandler(webrootHandler);
                 return getHandler.handleRequest(request);
             }
             if (method.equalsIgnoreCase("HEAD")) {
-                HeadRequestHandler headHandler = new HeadRequestHandler();
+                HeadRequestHandler headHandler = new HeadRequestHandler(webrootHandler);
                 return headHandler.handleRequest(request);
             }
 

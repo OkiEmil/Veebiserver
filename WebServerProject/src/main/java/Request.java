@@ -7,13 +7,12 @@ public class Request extends HttpMessage {
     private String requestProtocol;
 
     public Request(byte[] bodyBytes, HashMap<String, String> requestMap) {
-        this.requestMethod = requestMap.get("Method");
-        this.requestResource = requestMap.get("Resource");
-        this.requestProtocol = requestMap.get("Protocol");
+        this.requestMethod = requestMap.get("method");
+        this.requestResource = requestMap.get("resource");
+        this.requestProtocol = requestMap.get("protocol");
         if (bodyBytes != null) {
             this.setMessageBody(bodyBytes);
         }
-
         this.setHeaders(requestMap);
     }
 

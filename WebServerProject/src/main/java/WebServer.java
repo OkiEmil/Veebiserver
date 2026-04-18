@@ -7,6 +7,7 @@ import java.net.Socket;
 
 public class WebServer {
     public static void main(String[] args) {
+
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
 //            Users users=Users.getInstance(); TODO: PostRequestHandler to implement login and reqister
             while (true) { //just runs forever

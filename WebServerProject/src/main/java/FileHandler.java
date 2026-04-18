@@ -13,6 +13,9 @@ public class FileHandler
 
 	public static synchronized FileHandler getInstance()
 	{
+		if (instance == null) {
+			instance = new FileHandler();
+		}
 		return instance;
 	}
 
