@@ -15,6 +15,8 @@ public class Logger
 	{
 		try
 		{
+			String dateTime = LocalDate.now().toString();
+			logPath = logPath + "_" + dateTime + ".log";
 			logFilePath = Path.of(logPath);
 			Files.createFile(logFilePath);
 		}

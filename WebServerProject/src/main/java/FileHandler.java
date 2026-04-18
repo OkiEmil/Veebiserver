@@ -118,11 +118,21 @@ public class FileHandler
 		return getFileSizeImpl(path);
 	}
 
+	public FilePayload createFilePayLoad(String path) throws IOException
+	{
+		// TODO: add check for user allowed paths.
+		String fileName = Path.of(path).getFileName().toString();
+		String mimeType = getMimeType(path);
+		byte[] content = readFileAsBytes(path);
 
+		return new FilePayload(fileName, mimeType, content);
+	}
 	// DO NOT EXPOSE IT TO OUTER CLASSES!
 	private HashSet<Path> userAllowedPaths = new HashSet<Path>();
 
 	private HashSet<Path> systemAllowedDirectories = new HashSet<Path>();
+
+	private HashSet<Path> defaultHeaderPaths = new HashSet<Path>();
 
 	private Path baseUserPath = null;//Path.of("").toRealPath();
 
