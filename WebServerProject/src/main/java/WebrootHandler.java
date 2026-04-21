@@ -5,12 +5,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class WebrootHandler {
     private final File WEBROOTDIR;
+    private boolean isDirectoryListing = true;
 
     public WebrootHandler(String webrootLoc) {
         File webrootFolder = new File(webrootLoc);
@@ -57,7 +60,7 @@ public class WebrootHandler {
         File file = new File(WEBROOTDIR, path);
         if (doesFileOrFolderExist(file) && file.isDirectory()) {
             file = new File(file, "index.html");
-            if (!doesFileOrFolderExist(file)) {
+            if (!doesFileOrFolderExist(file) && isDirectoryListing) {
                 return getDirectoryListing(new File(WEBROOTDIR, path));
             }
 
@@ -79,7 +82,7 @@ public class WebrootHandler {
     private byte[] getDirectoryListing(File folder) {
 
         Path path = folder.toPath();
-
+        // https://codereview.stackexchange.com/questions/117451/scanning-a-directory-and-listing-contents-in-an-html-file
         StringBuilder html = new StringBuilder();
         try {
             html.append("<html>\n\t<body>\n\t\t<h1>Contents of ").append(path)
@@ -91,18 +94,39 @@ public class WebrootHandler {
                         if (Files.isDirectory(p)) {
                             name += "/";
                         }
-                        html.append("\t\t\t<li> <a href=")
-                                .append(name)
-                                .append(">")
-                                .append(name)
-                                .append("</a> </li>\n");
+                        try {
+                            html.append("\t\t\t<li> <a href=")
+                                    .append(name)
+                                    .append(">")
+                                    .append(name)
+                                    .append("</a>")
+                                    .append(" (")
+                                    .append(humanReadableByteCountSI(Files.size(p)))
+                                    .append(") Last modified ")
+                                    .append(Files.getLastModifiedTime(p))
+                                    .append("</li>\n");
+                        } catch (IOException e) {
+                            throw new RuntimeException("Error while getting file sizes or last modified time");
+                        }
                     });
             html.append("\t\t</ul>\n\t</body>\n</html>");
             return html.toString().getBytes(StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while making directory listing");
         }
 
+    }
+    //https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
+    public static String humanReadableByteCountSI(long bytes) {
+        if (-1000 < bytes && bytes < 1000) {
+            return bytes + " B";
+        }
+        CharacterIterator ci = new StringCharacterIterator("kMGTPE");
+        while (bytes <= -999_950 || bytes >= 999_950) {
+            bytes /= 1000;
+            ci.next();
+        }
+        return String.format("%.1f %cB", bytes / 1000.0, ci.current());
     }
 
     // unsure, whether this should be used instead in the request handlers
