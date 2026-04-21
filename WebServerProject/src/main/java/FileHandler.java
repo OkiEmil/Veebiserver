@@ -258,6 +258,10 @@ public class FileHandler
 			Path fileName = Path.of(path);
 			String mimeType = Files.probeContentType(fileName);
 
+			if (Files.isDirectory(fileName) && !fileExists(path+"index.html")) {
+				mimeType = "text/html";
+			}
+
 			if (mimeType == null) return "application/octet-stream"; // undetermined filetype
 			return mimeType;
 		} catch (IOException exception){

@@ -3,13 +3,11 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.security.spec.RSAOtherPrimeInfo;
 import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 
 public class ClientHandler implements Runnable {
 
+    private final String CONTINUE = "HTTP/1.1 100 Continue\r\n\r\n";
     private Socket connectionSocket;
     private WebrootHandler webrootHandler;
 
@@ -30,7 +28,7 @@ public class ClientHandler implements Runnable {
 
                 try {
 
-                    Request httpRequest = parseRequest(inputStream);
+                    Request httpRequest = parseRequest(inputStream, outputStream);
 
                     if (httpRequest == null) {
                         break;
@@ -61,7 +59,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private Request parseRequest(BufferedInputStream clientInputStream) throws IOException, HttpParsingException {
+    private Request parseRequest(BufferedInputStream clientInputStream, OutputStream outputStream) throws IOException, HttpParsingException {
         HashMap<String, String> requestMap = new HashMap<>();
         String requestLine = lineFromInputStream(clientInputStream); // the first line of the request
         // for example POST /contact_form.php HTTP/1.1
@@ -92,6 +90,13 @@ public class ClientHandler implements Runnable {
                 requestMap.put(headerLineComponents[0].toLowerCase(), headerLineComponents[1]);
 
                 headerLine = lineFromInputStream(clientInputStream);
+            }
+
+            String expectHeader = requestMap.get("expect");
+            if (expectHeader != null && expectHeader.equalsIgnoreCase("100-continue")){
+                // Before sending the body sometimes needs a 100-continue
+                outputStream.write(CONTINUE.getBytes(StandardCharsets.ISO_8859_1));
+                outputStream.flush();
             }
 
             byte[] bodyBytes = null;
@@ -154,7 +159,15 @@ public class ClientHandler implements Runnable {
 
     public Response handleRequest(Request request) {
         System.out.println("Handling: " + request.getHeader("method") + " method for resource " + request.getRequestResource());
+
         try {
+            // The Host: header MUST be included according to the protocol
+            if (request.getHeader("host") == null) {
+                return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
+                        .setStatus(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST)
+                        .setBody("<html><body> <h2>No Host: header received</h2> HTTP 1.1 requests must include the Host: header. </body></html>".getBytes(StandardCharsets.ISO_8859_1))
+                        .build();
+            }
             // Decide how to better handle different requests (GET, POST, DELETE, etc..)
             String method = request.getHeader("method");
             if (method.equalsIgnoreCase("GET")) {
