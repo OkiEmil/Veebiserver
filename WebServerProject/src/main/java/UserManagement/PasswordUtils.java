@@ -26,20 +26,10 @@ public class PasswordUtils {
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e); // tuleb midagi normaalset ette võtta !!!
+            throw new RuntimeException(e); // TODO: implement error handling
         }
     }
     public static boolean isPasswordCorrect(String receivedPassword, String salt, String savedPasswordHash) {
         return stringToHash(receivedPassword+salt).equals(savedPasswordHash);
     }
-
-//    public static void main(String[] args) { // töötamise testimiseks, kustuta hiljem
-//        String salt = generateSalt();
-//        System.out.println(salt);
-//        System.out.println(stringToHash("test123" + salt));
-//        System.out.println(stringToHash("test123"));
-//        if (isPasswordCorrect("test123",salt,stringToHash("test123" + salt))) {
-//            System.out.println("töötab");
-//        }
-//    }
 }

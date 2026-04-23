@@ -3,17 +3,32 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ClientHandler implements Runnable {
 
     private final String CONTINUE = "HTTP/1.1 100 Continue\r\n\r\n";
     private Socket connectionSocket;
     private WebrootHandler webrootHandler;
+    private SessionManager sessionManager;
+    private final List<RequestHandler> requestHandlers;
 
-    public ClientHandler(Socket connectionSocket) {
+    public ClientHandler(Socket connectionSocket, SessionManager sessionManager) {
         this.connectionSocket = connectionSocket;
+        this.sessionManager = sessionManager;
         this.webrootHandler = new WebrootHandler("public");
+        this.requestHandlers = loadRequestHandlers();
+    }
+
+    private List<RequestHandler> loadRequestHandlers() {
+        return Arrays.asList(
+                new GetRequestHandler(webrootHandler),
+                new HeadRequestHandler(webrootHandler),
+                new DownloadRequestHandler(webrootHandler)
+        );
     }
 
     @Override
@@ -35,6 +50,17 @@ public class ClientHandler implements Runnable {
                     } else if ("close".equalsIgnoreCase(httpRequest.getHeader("connection"))) {
                         keepConnection = false;
                     }
+
+                    // cookies session into sessionstate
+                    Map<String,String> cookies = httpRequest.getCookies();
+                    String sessionId=cookies.get("SESSIONID");
+                    String username;
+                    if (sessionId!=null) {
+                        username = sessionManager.getUsername(sessionId);
+                    } else username=null;
+                    SessionState sessionState = new SessionState(username,sessionId);
+                    httpRequest.setSessionState(sessionState);
+
                     Response httpResponse = handleRequest(httpRequest);
                     outputStream.write(httpResponse.getResponseAsBytes());
                     outputStream.flush();
@@ -170,13 +196,10 @@ public class ClientHandler implements Runnable {
             }
             // Decide how to better handle different requests (GET, POST, DELETE, etc..)
             String method = request.getHeader("method");
-            if (method.equalsIgnoreCase("GET")) {
-                GetRequestHandler getHandler = new GetRequestHandler(webrootHandler);
-                return getHandler.handleRequest(request);
-            }
-            if (method.equalsIgnoreCase("HEAD")) {
-                HeadRequestHandler headHandler = new HeadRequestHandler(webrootHandler);
-                return headHandler.handleRequest(request);
+            for (RequestHandler requestHandler : requestHandlers) {
+                if (requestHandler.canHandle(request)) {
+                    return requestHandler.handleRequest(request);
+                }
             }
 
 

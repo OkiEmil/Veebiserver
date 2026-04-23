@@ -15,7 +15,7 @@ import static UserManagement.PasswordUtils.stringToHash;
 
 public class Users {
     private static volatile Users instance; // singleton
-    private final String usersFilePath="usersfile.ser"; // fail, kus kasutajad paroolidega hoitakse
+    private final String usersFilePath="usersfile.ser"; // file, where users are stored
     private final ConcurrentHashMap<String, User> userMap = new ConcurrentHashMap<>(); // {username: [salt,hashedpassword]} kujul
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -122,7 +122,7 @@ public class Users {
      * Saves user data into a file, should be run when the server shuts down.
      * Is automatic, does not corrupt the user data file
      */
-    public synchronized void saveUsersToFIle() { // TODO: do it so this runs when the server shuts down
+    public synchronized void saveUsersToFile() { // runs when the server shuts down
         Path temp = Paths.get(this.usersFilePath + ".tmp");
         Path original = Paths.get(this.usersFilePath);
 
