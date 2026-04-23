@@ -12,7 +12,12 @@ public class WebServer {
             Users users=Users.getInstance();
             Runtime.getRuntime().addShutdownHook(new Thread(users::saveUsersToFile));
             SessionManager sessionManager = new SessionManager();
+            long last_saved = System.currentTimeMillis();
             while (true) { //just runs forever
+                if (System.currentTimeMillis()-last_saved>600000) { // periodically saves the userdata (every 10 mins)
+                    new Thread(users::saveUsersToFile);
+                    last_saved=System.currentTimeMillis();
+                }
                 Socket clientSocket = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(clientSocket,sessionManager);
                 new Thread(clientHandler).start();

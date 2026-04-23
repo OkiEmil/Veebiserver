@@ -92,7 +92,7 @@ public class Users {
             return false;
         }
         String salt = PasswordUtils.generateSalt();
-        String hashedSaltedPassword = stringToHash(password+salt);
+        String hashedSaltedPassword = stringToHash(password,salt);
         User user = new User(); // teeb kasutaja
         user.setUserName(username);
         user.setSalt(salt);
@@ -122,7 +122,7 @@ public class Users {
      * Saves user data into a file, should be run when the server shuts down.
      * Is automatic, does not corrupt the user data file
      */
-    public synchronized void saveUsersToFile() { // runs when the server shuts down
+    public synchronized void saveUsersToFile() { // runs when the server shuts down and periodically
         Path temp = Paths.get(this.usersFilePath + ".tmp");
         Path original = Paths.get(this.usersFilePath);
 
