@@ -8,6 +8,7 @@ public enum HttpStatus {
     CLIENT_ERROR_404_NOT_FOUND(404, "Not Found" ),
     CLIENT_ERROR_405_METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
     CLIENT_ERROR_414_BAD_REQUEST(414, "URI Too Long"),
+    CLIENT_ERROR_415_UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type"),
 
 
     /* --- SERVER ERRORS --- */
@@ -15,8 +16,8 @@ public enum HttpStatus {
     SERVER_ERROR_501_NOT_IMPLEMENTED(501, "Not Implemented"),
     SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED(505, "Http Version Not Supported"),
 
-    OK(200,"OK" );
-
+    OK(200,"OK" ),
+    CREATED(201, "CREATED");
 
     public final int STATUS_CODE;
     public final String MESSAGE;
