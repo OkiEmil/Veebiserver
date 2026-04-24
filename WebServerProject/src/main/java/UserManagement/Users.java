@@ -93,11 +93,7 @@ public class Users {
         }
         String salt = PasswordUtils.generateSalt();
         String hashedSaltedPassword = stringToHash(password,salt);
-        User user = new User(); // teeb kasutaja
-        user.setUserName(username);
-        user.setSalt(salt);
-        user.setHashedPassword(hashedSaltedPassword);
-
+        User user = new User(username,salt,hashedSaltedPassword); // teeb kasutaja, TODO: võiks kontrollida paroolide sobivust
         this.userMap.put(username, user);
         appendUserToFile(user);
         return true;
@@ -120,7 +116,7 @@ public class Users {
 
     /**
      * Saves user data into a file, should be run when the server shuts down.
-     * Is automatic, does not corrupt the user data file
+     * Is atomatic, does not corrupt the user data file
      */
     public synchronized void saveUsersToFile() { // runs when the server shuts down and periodically
         Path temp = Paths.get(this.usersFilePath + ".tmp");

@@ -11,9 +11,9 @@ import java.util.Map;
 public class ClientHandler implements Runnable {
 
     private final String CONTINUE = "HTTP/1.1 100 Continue\r\n\r\n";
-    private Socket connectionSocket;
-    private WebrootHandler webrootHandler;
-    private SessionManager sessionManager;
+    private final Socket connectionSocket;
+    private final WebrootHandler webrootHandler;
+    private final SessionManager sessionManager;
     private final List<RequestHandler> requestHandlers;
 
     public ClientHandler(Socket connectionSocket, SessionManager sessionManager) {
@@ -27,7 +27,8 @@ public class ClientHandler implements Runnable {
         return Arrays.asList(
                 new GetRequestHandler(webrootHandler),
                 new HeadRequestHandler(webrootHandler),
-                new DownloadRequestHandler(webrootHandler)
+                new DownloadRequestHandler(webrootHandler),
+                new PostRequestHandler(webrootHandler)
         );
     }
 
@@ -194,7 +195,7 @@ public class ClientHandler implements Runnable {
                         .setBody("<html><body> <h2>No Host: header received</h2> HTTP 1.1 requests must include the Host: header. </body></html>".getBytes(StandardCharsets.ISO_8859_1))
                         .build();
             }
-            // Decide how to better handle different requests (GET, POST, DELETE, etc..)
+
             String method = request.getHeader("method");
             for (RequestHandler requestHandler : requestHandlers) {
                 if (requestHandler.canHandle(request)) {

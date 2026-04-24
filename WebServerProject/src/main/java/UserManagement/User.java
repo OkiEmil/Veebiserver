@@ -3,6 +3,8 @@ package UserManagement;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class User implements Serializable {
     @JsonProperty("username")
@@ -11,10 +13,17 @@ public class User implements Serializable {
     private String salt;
     @JsonProperty("hashedPassword")
     private String hashedPassword;
-    // hiljem lisa createdAt
+    @JsonProperty("createdAt")
+    private long createdAt;
 
     public User() {}
 
+    public User(String username,String salt,String hashedPassword) {
+        this.username=username;
+        this.salt=salt;
+        this.hashedPassword=hashedPassword;
+        this.createdAt= System.currentTimeMillis();
+    }
     public String getUsername() {
         return username;
     }
@@ -37,6 +46,14 @@ public class User implements Serializable {
 
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
+    }
+
+    public String getCreatedAt() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(createdAt));
+    }
+
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override
