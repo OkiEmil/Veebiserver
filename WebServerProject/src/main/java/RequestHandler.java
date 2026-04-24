@@ -16,8 +16,7 @@ public abstract class RequestHandler {
         HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
                 .setHttpVersion(request.getRequestProtocol())
                 .setStatus(HttpStatus.OK)
-                .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
-                        .format(DateTimeFormatter.RFC_1123_DATE_TIME));
+                .addHeader("Date", getDateTime());
         return responseBuilder.build();
     }
 
@@ -27,5 +26,10 @@ public abstract class RequestHandler {
 
     public WebrootHandler getWEBROOT_HANDLER() {
         return WEBROOT_HANDLER;
+    }
+
+    private String getDateTime() {
+        return ZonedDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.RFC_1123_DATE_TIME);
     }
 }
