@@ -63,8 +63,30 @@ public class ClientHandler implements Runnable {
                     httpRequest.setSessionState(sessionState);
 
                     Response httpResponse = handleRequest(httpRequest);
-                    outputStream.write(httpResponse.getResponseAsBytes());
+                    //outputStream.write(httpResponse.getResponseAsBytes());
+                    //outputStream.flush();
+
+                    outputStream.write(httpResponse.getHeaderAsBytes());
+
+                    if(httpResponse.getInputStream() != null)
+                    {
+                        InputStream in = httpResponse.getInputStream();
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+
+                        while((bytesRead = in.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, bytesRead);
+                        }
+
+                        in.close();
+                    }
+                    else if(httpResponse.getMessageBody() != null)
+                    {
+                        outputStream.write(httpResponse.getMessageBody());
+                    }
+
                     outputStream.flush();
+
                 } catch (SocketTimeoutException e){
                     keepConnection = false;
                 }

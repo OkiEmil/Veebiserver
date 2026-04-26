@@ -55,6 +55,28 @@ public class Response extends HttpMessage {
 
     }
 
+    public byte[] getHeaderAsBytes() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(httpVersion)
+                .append(" ")
+                .append(httpStatus.STATUS_CODE)
+                .append(" ")
+                .append(httpStatus.MESSAGE)
+                .append(CRLF);
+
+        for (String headerName : getHeaderNames()) {
+            builder.append(headerName)
+                    .append(": ")
+                    .append(getHeader(headerName))
+                    .append(CRLF);
+        }
+
+        builder.append(CRLF);
+
+        return builder.toString().getBytes(StandardCharsets.ISO_8859_1);
+    }
+
     public void setInputStream(InputStream inputStream) {
         this.bodyStream = inputStream;
     }
