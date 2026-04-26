@@ -1,3 +1,4 @@
+import java.sql.SQLOutput;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -12,7 +13,7 @@ public abstract class RequestHandler {
         this.WEBROOT_HANDLER = webrootHandler;
     }
 
-    protected Response handleRequest(Request request) {
+    protected Response handleRequest(Request request, SessionManager sessionManager) {
         HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
                 .setHttpVersion(request.getRequestProtocol())
                 .setStatus(HttpStatus.OK)
@@ -21,7 +22,7 @@ public abstract class RequestHandler {
     }
 
     public boolean canHandle(Request request) {
-        return request.getRequestMethod().equals(HANDLER_METHOD);
+        return request.getRequestMethod().equalsIgnoreCase(HANDLER_METHOD);
     }
 
     public WebrootHandler getWEBROOT_HANDLER() {

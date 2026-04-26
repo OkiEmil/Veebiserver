@@ -14,20 +14,19 @@ public class PostRequestHandler extends RequestHandler {
         logger = new Logger("PostRequestHandler");
 
         IMPLEMENTED_RESOURCES = Map.of(
-                "/login", () -> new PostLoginHandler(webrootHandler),
-                "/register", () -> new PostRegisterHandler(webrootHandler)
+                "public/login", () -> new PostLoginHandler(webrootHandler),
+                "public/register", () -> new PostRegisterHandler(webrootHandler)
         );
     }
 
     @Override
-    protected Response handleRequest(Request request) {
-
+    protected Response handleRequest(Request request, SessionManager sessionManager) {
         try {
             String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
 
             if (IMPLEMENTED_RESOURCES.containsKey(resource)) {
                 try {
-                    return IMPLEMENTED_RESOURCES.get(resource).get().handleRequest(request);
+                    return IMPLEMENTED_RESOURCES.get(resource).get().handleRequest(request, sessionManager);
 
                 } catch (Exception exception) {
                     logger.log(exception.getLocalizedMessage(), true);
@@ -54,7 +53,7 @@ public class PostRequestHandler extends RequestHandler {
     @Override
     public boolean canHandle(Request request) {
         try {
-            return "POST".equals(request.getRequestMethod()) && IMPLEMENTED_RESOURCES
+            return "POST".equalsIgnoreCase(request.getRequestMethod()) && IMPLEMENTED_RESOURCES
                     .containsKey(getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource()));
         } catch (FileNotFoundException e) {return false;}
     }

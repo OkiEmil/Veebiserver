@@ -13,7 +13,7 @@ public class DownloadRequestHandler extends RequestHandler {
     }
 
     @Override
-    protected Response handleRequest(Request request) {
+    protected Response handleRequest(Request request,SessionManager sessionManager) {
         Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
         try {
             String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
@@ -28,7 +28,7 @@ public class DownloadRequestHandler extends RequestHandler {
             File file = new File(resource);
             InputStream inputStream = new FileInputStream(file);
 
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
                     .addHeader("Content-Type", FileHandler.getInstance().getMimeType(resource))
                     .addHeader("Content-Length", String.valueOf(file.length()))
                     .addHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
@@ -61,7 +61,7 @@ public class DownloadRequestHandler extends RequestHandler {
 
             FilePayload payload = FileHandler.getInstance().createFilePayLoad(resource);
 
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
             .addHeader("Content-Type", payload.mimeType)
             .addHeader("Content-Length", String.valueOf(payload.content.length))
             .addHeader("Content-Disposition", "attachment; filename=\"" + payload.fileName + "\"")

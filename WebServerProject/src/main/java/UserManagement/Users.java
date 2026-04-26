@@ -38,8 +38,6 @@ public class Users {
      * Loads the user data into memory upon starting the server
      */
     private void mapUsersFromFile() {
-        File file = new File(this.usersFilePath); // filePath is a String
-        if (!file.exists()) return;
         try (BufferedReader reader = new BufferedReader(new FileReader(this.usersFilePath, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -49,7 +47,7 @@ public class Users {
                     User user = mapper.readValue(line, User.class);
                     this.userMap.put(user.getUsername(), user);
                 } catch (IOException e) {
-                    System.err.println("Skipped line: " + line);
+                    System.err.println("Skipped line: " + line + " due to " + e.getMessage());
                 }
             }
         } catch (IOException e) {

@@ -7,7 +7,7 @@ public class HeadRequestHandler extends RequestHandler{
     }
 
     @Override
-    protected Response handleRequest(Request request) {
+    protected Response handleRequest(Request request, SessionManager sessionManager) {
 
         try {
             String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
@@ -16,7 +16,7 @@ public class HeadRequestHandler extends RequestHandler{
                         request.getRequestProtocol()).buildResponseFromError();
             }
 
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request, sessionManager))
                     .addHeader("Content-type", FileHandler.getInstance().getMimeType(resource))
                     .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(resource)));
 

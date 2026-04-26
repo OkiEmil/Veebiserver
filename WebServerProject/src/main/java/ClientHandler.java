@@ -54,7 +54,7 @@ public class ClientHandler implements Runnable {
 
                     // cookies session into sessionstate
                     Map<String,String> cookies = httpRequest.getCookies();
-                    String sessionId=cookies.get("SESSIONID");
+                    String sessionId=cookies.get("sessionid");
                     String username;
                     if (sessionId!=null) {
                         username = sessionManager.getUsername(sessionId);
@@ -225,15 +225,14 @@ public class ClientHandler implements Runnable {
             }
 
             String method = request.getHeader("method");
-            for (RequestHandler requestHandler : requestHandlers) {
+            for (RequestHandler requestHandler : this.requestHandlers) {
                 if (requestHandler.canHandle(request)) {
-                    return requestHandler.handleRequest(request);
+                    return requestHandler.handleRequest(request, this.sessionManager);
                 }
             }
 
-
             return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED,
-                    "method" + method + " not implemented",
+                    "method " + method + " not implemented",
                     request.getRequestProtocol()).buildResponseFromError();
         } catch (Exception e) {
             return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR,

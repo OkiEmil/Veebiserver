@@ -1,5 +1,6 @@
 package UserManagement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
@@ -47,9 +48,13 @@ public class User implements Serializable {
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
     }
-
-    public String getCreatedAt() {
+    @JsonIgnore
+    public String getStringCreatedAt() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(createdAt));
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
     }
 
     public void setCreatedAt(long createdAt) {

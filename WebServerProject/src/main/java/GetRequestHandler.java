@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.util.Map;
 
 // TODO: add logging
 
@@ -14,7 +13,7 @@ public class GetRequestHandler extends RequestHandler {
     }
 
     @Override
-    protected Response handleRequest(Request request) {
+    protected Response handleRequest(Request request, SessionManager sessionManager) {
 
         //logger.log("Trying to handle get request.", true);
 
@@ -28,7 +27,7 @@ public class GetRequestHandler extends RequestHandler {
                         request.getRequestProtocol()).buildResponseFromError();
             }
 
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request, sessionManager))
                     .addHeader("Content-type", FileHandler.getInstance().getMimeType(resource))
                     .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(resource)))
                     .setBody(getWEBROOT_HANDLER().getByteArray(request.getRequestResource())); // PLACEHOLDER
