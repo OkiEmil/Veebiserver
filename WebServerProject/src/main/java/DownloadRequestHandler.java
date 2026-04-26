@@ -1,19 +1,56 @@
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class DownloadRequestHandler extends RequestHandler
 {
-    Logger logger;
+    //Logger logger;
 
     public DownloadRequestHandler(WebrootHandler webrootHandler) {
         super("DOWNLOAD", webrootHandler);
 
-        logger = new Logger("DownloadRequestHandler");
+        //logger = new Logger("DownloadRequestHandler");
     }
 
     @Override
+    protected Response handleRequest(Request request)
+    {
+        try{
+            String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
+
+            if(!FileHandler.getInstance().fileExists(resource))
+            {
+                return new HttpResponseBuilder()
+                    .setHttpVersion(request.getRequestProtocol())
+                    .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
+                    .build();
+            }
+
+            File file = new File(resource);
+            InputStream inputStream = new FileInputStream(file);
+
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
+                .addHeader("Content-Type", FileHandler.getInstance().getMimeType(resource))
+                .addHeader("Content-Length", String.valueOf(file.length()))
+                .addHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
+                .setInputStream(inputStream);
+
+            return responseBuilder.build();
+        }
+        catch(Exception exception)
+        {
+            return new HttpResponseBuilder()
+                .setHttpVersion(request.getRequestProtocol())
+                .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
+                .build();
+        }
+    }
+
+    /*@Override
     protected Response handleRequest(Request request) {
 
-        logger.log("Trying to send file.", true);
+        //logger.log("Trying to send file.", true);
 
         try {
             String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
@@ -38,12 +75,12 @@ public class DownloadRequestHandler extends RequestHandler
         }
         catch (IOException exception)
         {
-            logger.log("Failed to send file.", true);
+            //logger.log("Failed to send file.", true);
 
             return new HttpResponseBuilder()
                     .setHttpVersion(request.getRequestProtocol())
                     .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
                     .build();
         }
-    }
+    }*/
 }

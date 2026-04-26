@@ -1,3 +1,4 @@
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ public class Response extends HttpMessage {
     private final String CRLF = "\r\n";
     private HttpStatus httpStatus;
     private String httpVersion;
+    private InputStream bodyStream;
 
     public void setHttpVersion(String httpVersion) {
         this.httpVersion = httpVersion;
@@ -51,6 +53,14 @@ public class Response extends HttpMessage {
         buffer.put(getMessageBody());
         return buffer.array();
 
+    }
+
+    public void setInputStream(InputStream inputStream) {
+        this.bodyStream = inputStream;
+    }
+
+    public InputStream getInputStream() {
+        return this.bodyStream;
     }
 
 }

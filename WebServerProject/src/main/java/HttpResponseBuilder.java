@@ -1,3 +1,5 @@
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 
 public class HttpResponseBuilder {
@@ -27,9 +29,24 @@ public class HttpResponseBuilder {
         this.response.setHeaders(headers);
         return this;
     }
+    public HttpResponseBuilder setInputStream(InputStream inputStream) {
+        this.response.setInputStream(inputStream);
+        return this;
+    }
     public Response build() {
         if (response.getHeader("content-length") == null) {
-            addHeader("content-length", "0");
+            if(this.response.getInputStream() == null)
+                addHeader("content-length", "0");
+            else
+            {
+                try
+                {
+                    addHeader("content-length", "" + this.response.getInputStream().available());
+                }
+                catch(Exception e)
+                {
+                }
+            }
         }
         return response;
     }
