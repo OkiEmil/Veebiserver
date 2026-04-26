@@ -1,10 +1,7 @@
-import java.util.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,12 +18,18 @@ public class Logger
 			logPath = logPath + "_" + dateTime + ".log";
 			logFilePath = Path.of(logPath);
 
+			Path parentDir = logFilePath.getParent();
+			if (parentDir != null && !Files.exists(parentDir)) {
+    			Files.createDirectories(parentDir);
+			}
+
 			if(Files.exists(Path.of(logPath)))
 				Files.createFile(logFilePath);
 		}
-		catch(Exception exception)
+		catch(IOException  exception)
 		{
 			System.out.println("Failed to create log file: " + exception.getLocalizedMessage());
+			exception.printStackTrace();
 		}
 	}
 
@@ -42,9 +45,10 @@ public class Logger
 			}
 			Files.writeString(logFilePath, message + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 		}
-		catch(Exception exception)
+		catch(IOException  exception)
 		{
 			System.out.println("Failed to write log to file:" + exception.getLocalizedMessage());
+			exception.printStackTrace();
 		}
 	}
 
@@ -89,7 +93,7 @@ public class Logger
 
 			Files.writeString(localPath, message + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 		}
-		catch(Exception exception)
+		catch(IOException  exception)
 		{
 			System.out.println("Failed to create log file: " + exception.getLocalizedMessage());
 			exception.printStackTrace();
