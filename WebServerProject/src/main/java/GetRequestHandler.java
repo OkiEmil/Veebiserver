@@ -18,6 +18,8 @@ public class GetRequestHandler extends RequestHandler {
 
         //logger.log("Trying to handle get request.", true);
 
+        Logger.logStatic(ENamedStaticLogger.REQUEST_GET, "Trying to handle get reequest.", true);
+
         try {
             String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
 
@@ -37,6 +39,7 @@ public class GetRequestHandler extends RequestHandler {
 
         } catch (IOException e) {
             //logger.log("Failed to handle log request.", true);
+            Logger.logStatic(ENamedStaticLogger.REQUEST_GET, "Failed to handle log request.", true);
             return new HttpResponseBuilder()
                     .setHttpVersion(request.getRequestProtocol())
                     .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)

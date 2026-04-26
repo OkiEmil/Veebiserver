@@ -16,6 +16,7 @@ public class DownloadRequestHandler extends RequestHandler
     @Override
     protected Response handleRequest(Request request)
     {
+        Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
         try{
             String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
 
@@ -40,6 +41,7 @@ public class DownloadRequestHandler extends RequestHandler
         }
         catch(Exception exception)
         {
+            Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
             return new HttpResponseBuilder()
                 .setHttpVersion(request.getRequestProtocol())
                 .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)

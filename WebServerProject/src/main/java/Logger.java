@@ -6,6 +6,8 @@ import java.nio.file.StandardOpenOption;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Logger
 {
@@ -19,7 +21,7 @@ public class Logger
 			logPath = logPath + "_" + dateTime + ".log";
 			logFilePath = Path.of(logPath);
 
-			if(Files.exists(Path.of(logPath), null))
+			if(Files.exists(Path.of(logPath)))
 				Files.createFile(logFilePath);
 		}
 		catch(Exception exception)
@@ -34,7 +36,9 @@ public class Logger
 		{
 			if(includeDate)
 			{
-				message = "[" + LocalDate.now().toString() +  "]: " + message;
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+				//message = "[" + LocalDate.now().toString() +  "]: " + message;
+				message = "[" + LocalDateTime.now().format(formatter) + "]: " + message;
 			}
 			Files.writeString(logFilePath, message + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 		}
@@ -44,5 +48,52 @@ public class Logger
 		}
 	}
 
+	public static void logStatic(ENamedStaticLogger context, String message, boolean includeDate)
+	{
+		Path localPath;
+		
+		switch(context)
+		{
+			default:
+				return;
+			
+			case REQUEST_GET:
+				localPath = Path.of("Logs/GetRequests.log");
+				break;
+			case REQUEST_POST:
+				localPath = Path.of("Logs/PostRequests.log");
+				break;
+			case REQUEST_DOWNLOAD:
+				localPath = Path.of("Logs/DownloadRequests.log");
+				break;
+		}
+
+		try
+		{
+			
+
+			Path parentDir = localPath.getParent();
+			if (parentDir != null && !Files.exists(parentDir)) {
+    			Files.createDirectories(parentDir);
+			}
+
+			if(!Files.exists(localPath))
+				Files.createFile(localPath);
+
+			if(includeDate)
+			{
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+				//message = "[" + LocalDate.now().toString() +  "]: " + message;
+				message = "[" + LocalDateTime.now().format(formatter) + "]: " + message;
+			}
+
+			Files.writeString(localPath, message + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+		}
+		catch(Exception exception)
+		{
+			System.out.println("Failed to create log file: " + exception.getLocalizedMessage());
+			exception.printStackTrace();
+		}
+	}
 
 }
