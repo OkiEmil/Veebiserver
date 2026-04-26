@@ -20,7 +20,9 @@ public class GetRequestHandler extends RequestHandler {
         Logger.logStatic(ENamedStaticLogger.REQUEST_GET, "Trying to handle get reequest.", true);
 
         try {
-
+            if (request.getRequestResource().equalsIgnoreCase("/logout")) {
+                return new GetLogoutHandler(this.getWEBROOT_HANDLER()).handleRequest(request,sessionManager);
+            }
             String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
             if (!FileHandler.getInstance().fileExists(resource)) {
                 return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_404_NOT_FOUND, "file at path " + resource +" was not found",
