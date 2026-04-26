@@ -34,12 +34,12 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-
+        OutputStream outputStream = null;
         try {
             connectionSocket.setSoTimeout(5000); // end the connection automatically after 5 seconds of not getting anything
             boolean keepConnection = true;
             BufferedInputStream inputStream = new BufferedInputStream(connectionSocket.getInputStream());
-            OutputStream outputStream = connectionSocket.getOutputStream();
+            outputStream = connectionSocket.getOutputStream();
             while (keepConnection) {
 
                 try {
@@ -94,16 +94,23 @@ public class ClientHandler implements Runnable {
 
         } catch (Exception ex) {
             if (!(ex instanceof SocketException)) {
+                try {
+                    if (outputStream != null) {
+                        outputStream.write(new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, "HTTP/1.1")
+                                .buildResponseFromError().getResponseAsBytes());
+                        outputStream.flush();
+                    }
 
-                // TODO - implement a way to give a response of the error instead of this
-                ex.printStackTrace();
+                } catch (Exception ignored) {
+
+                }
             }
         }
         finally {
             try {
                 this.connectionSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ignored) {
+
             }
         }
     }
@@ -212,10 +219,9 @@ public class ClientHandler implements Runnable {
         try {
             // The Host: header MUST be included according to the protocol
             if (request.getHeader("host") == null) {
-                return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
-                        .setStatus(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST)
-                        .setBody("<html><body> <h2>No Host: header received</h2> HTTP 1.1 requests must include the Host: header. </body></html>".getBytes(StandardCharsets.ISO_8859_1))
-                        .build();
+                return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST,
+                        "No Host: header received, HTTP 1.1 requests must include the Host: header.",
+                        request.getRequestProtocol()).buildResponseFromError();
             }
 
             String method = request.getHeader("method");
@@ -226,14 +232,12 @@ public class ClientHandler implements Runnable {
             }
 
 
-            return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED)
-                    .setBody(("method" + method + " not implemented").getBytes())
-                    .build();
+            return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED,
+                    "method" + method + " not implemented",
+                    request.getRequestProtocol()).buildResponseFromError();
         } catch (Exception e) {
-            return new HttpResponseBuilder().setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
-                    .build();
+            return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR,
+                    request.getRequestProtocol()).buildResponseFromError();
         }
 
     }

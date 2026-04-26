@@ -3,8 +3,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DownloadRequestHandler extends RequestHandler
-{
+public class DownloadRequestHandler extends RequestHandler {
     //Logger logger;
 
     public DownloadRequestHandler(WebrootHandler webrootHandler) {
@@ -14,55 +13,50 @@ public class DownloadRequestHandler extends RequestHandler
     }
 
     @Override
-    protected Response handleRequest(Request request)
-    {
+    protected Response handleRequest(Request request) {
         Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
-        try{
+        try {
             String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
 
-            if(!FileHandler.getInstance().fileExists(resource))
-            {
+            if (!FileHandler.getInstance().fileExists(resource)) {
                 return new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
-                    .build();
+                        .setHttpVersion(request.getRequestProtocol())
+                        .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
+                        .build();
             }
 
             File file = new File(resource);
             InputStream inputStream = new FileInputStream(file);
 
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request))
-                .addHeader("Content-Type", FileHandler.getInstance().getMimeType(resource))
-                .addHeader("Content-Length", String.valueOf(file.length()))
-                .addHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
-                .setInputStream(inputStream);
+                    .addHeader("Content-Type", FileHandler.getInstance().getMimeType(resource))
+                    .addHeader("Content-Length", String.valueOf(file.length()))
+                    .addHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
+                    .setInputStream(inputStream);
 
             return responseBuilder.build();
-        }
-        catch(Exception exception)
-        {
+        } catch (Exception exception) {
             Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
             return new HttpResponseBuilder()
-                .setHttpVersion(request.getRequestProtocol())
-                .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
-                .build();
+                    .setHttpVersion(request.getRequestProtocol())
+                    .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
+                    .build();
         }
     }
+
 
     /*@Override
     protected Response handleRequest(Request request) {
 
-        //logger.log("Trying to send file.", true);
+        logger.log("Trying to send file.", true);
 
         try {
             String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
 
             if(!FileHandler.getInstance().fileExists(resource))
             {
-                return new HttpResponseBuilder()
-                .setHttpVersion(request.getRequestProtocol())
-                .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
-                .build();
+                return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_404_NOT_FOUND, "file at path " + resource +" was not found",
+                        request.getRequestProtocol()).buildResponseFromError();
             }
 
             FilePayload payload = FileHandler.getInstance().createFilePayLoad(resource);
@@ -79,10 +73,8 @@ public class DownloadRequestHandler extends RequestHandler
         {
             //logger.log("Failed to send file.", true);
 
-            return new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
-                    .build();
+            return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, exception.getLocalizedMessage(),
+                    request.getRequestProtocol()).buildResponseFromError();
         }
     }*/
 }
