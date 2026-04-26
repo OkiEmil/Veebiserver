@@ -1,4 +1,5 @@
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -31,27 +32,22 @@ public class PostRequestHandler extends RequestHandler {
                 } catch (Exception exception) {
                     logger.log(exception.getLocalizedMessage(), true);
 
-                    return new HttpResponseBuilder()
-                            .setHttpVersion(request.getRequestProtocol())
-                            .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
-                            .build();
+                    return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, exception.getLocalizedMessage(),
+                                request.getRequestProtocol()).buildResponseFromError();
+
                 }
             }
 
 
-            return new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED)
-                    .build();
+            return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED,
+                    request.getRequestProtocol()).buildResponseFromError();
 
 
         } catch (Exception exception) {
             logger.log(exception.getLocalizedMessage(), true);
 
-            return new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
-                    .build();
+            return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, exception.getLocalizedMessage(),
+                    request.getRequestProtocol()).buildResponseFromError();
         }
     }
 

@@ -20,10 +20,8 @@ public class DownloadRequestHandler extends RequestHandler
 
             if(!FileHandler.getInstance().fileExists(resource))
             {
-                return new HttpResponseBuilder()
-                .setHttpVersion(request.getRequestProtocol())
-                .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
-                .build();
+                return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_404_NOT_FOUND, "file at path " + resource +" was not found",
+                        request.getRequestProtocol()).buildResponseFromError();
             }
 
             FilePayload payload = FileHandler.getInstance().createFilePayLoad(resource);
@@ -40,10 +38,9 @@ public class DownloadRequestHandler extends RequestHandler
         {
             logger.log("Failed to send file.", true);
 
-            return new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
-                    .build();
+            return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, exception.getLocalizedMessage(),
+                    request.getRequestProtocol()).buildResponseFromError();
         }
+
     }
 }

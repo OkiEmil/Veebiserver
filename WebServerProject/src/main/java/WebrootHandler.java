@@ -28,16 +28,13 @@ public class WebrootHandler {
     }
 
     public String getCorrectPath(String path) throws FileNotFoundException {
+        System.out.println(path + "HEREE");
         File file = new File(WEBROOTDIR, path);
-        if (doesFileOrFolderExist(file) && file.isDirectory()) {
+        if (file.isDirectory()) {
             if (doesFileOrFolderExist(new File(WEBROOTDIR, path + "index.html"))) {
-
                 path += "index.html";
             }
 
-        } else if (!doesFileOrFolderExist(file)) {
-            System.out.println(path + " no file found here");
-            throw new FileNotFoundException("No file found at path");
         }
         System.out.println("New path: " + WEBROOTDIR + path);
         return WEBROOTDIR + path;
@@ -95,9 +92,9 @@ public class WebrootHandler {
                             name += "/";
                         }
                         try {
-                            html.append("\t\t\t<li> <a href=")
+                            html.append("\t\t\t<li> <a href=\"")
                                     .append(name)
-                                    .append(">")
+                                    .append("\">")
                                     .append(name)
                                     .append("</a>")
                                     .append(" (")
