@@ -4,10 +4,10 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PostRegisterHandler extends PostRequestHandler{
+public class PostRegisterHandler extends RequestHandler{
 
     public PostRegisterHandler(WebrootHandler webrootHandler) {
-        super(webrootHandler);
+        super("/register",webrootHandler);
     }
 
     @Override
@@ -16,11 +16,7 @@ public class PostRegisterHandler extends PostRequestHandler{
         String password = request.getParameter("password");
         if (Users.getInstance().addUser(username,password)) {
             byte[] body = "register successful".getBytes();
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.OK)
-                    .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
-                            .format(DateTimeFormatter.RFC_1123_DATE_TIME))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
                     .addHeader("Content-type", "text/html")
                     .addHeader("Content-length", String.valueOf(body.length))
                     .setBody(body);
@@ -29,11 +25,7 @@ public class PostRegisterHandler extends PostRequestHandler{
         }
         else { // registering failed
             byte[] body = "register failed".getBytes();
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
-                    .setStatus(HttpStatus.OK)
-                    .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
-                            .format(DateTimeFormatter.RFC_1123_DATE_TIME))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
                     .addHeader("Content-type", "text/html")
                     .addHeader("Content-length", String.valueOf(body.length))
                     .setBody(body);

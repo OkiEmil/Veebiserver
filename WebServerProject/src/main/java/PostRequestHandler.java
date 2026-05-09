@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 public class PostRequestHandler extends RequestHandler {
 
     Logger logger;
-    private final Map<String, Supplier<PostRequestHandler>> IMPLEMENTED_RESOURCES;
+    private final Map<String, Supplier<RequestHandler>> IMPLEMENTED_RESOURCES;
 
     public PostRequestHandler(WebrootHandler webrootHandler)
     {

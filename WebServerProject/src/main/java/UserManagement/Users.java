@@ -38,6 +38,11 @@ public class Users {
      * Loads the user data into memory upon starting the server
      */
     private void mapUsersFromFile() {
+        try {
+            new File(this.usersFilePath).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Users file missing, failed to create new users file", e);
+        }
         try (BufferedReader reader = new BufferedReader(new FileReader(this.usersFilePath, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
