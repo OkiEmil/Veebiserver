@@ -15,7 +15,7 @@ public abstract class RequestHandler {
 
     protected Response handleRequest(Request request, SessionManager sessionManager) {
         HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                .setHttpVersion(request.getRequestProtocol())
+                .setHttpVersion(request.getRequestProtocol().getLITERAL())
                 .setStatus(HttpStatus.OK)
                 .addHeader("Date", getDateTime());
         return responseBuilder.build();

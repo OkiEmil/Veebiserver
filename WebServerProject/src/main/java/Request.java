@@ -7,15 +7,15 @@ import static java.net.URLDecoder.decode;
 
 public class Request extends HttpMessage {
 
-    private String requestMethod;
+    private final String requestMethod;
     private String requestResource;
-    private String requestProtocol;
+    private final String requestProtocol;
     private SessionState sessionState;
     private Map<String,String> parameters;
 
-    public Request(byte[] bodyBytes, HashMap<String, String> requestMap) {
+    public Request(byte[] bodyBytes, HashMap<String, String> requestMap) throws HttpParsingException {
         this.requestMethod = requestMap.get("method");
-        this.requestResource = requestMap.get("resource");
+        setRequestTarget(requestMap.get("resource"));
         this.requestProtocol = requestMap.get("protocol");
         if (bodyBytes != null) {
             this.setMessageBody(bodyBytes);
@@ -23,7 +23,12 @@ public class Request extends HttpMessage {
         this.setHeaders(requestMap);
         this.parameters=this.getParameters();
     }
-
+    void setRequestTarget(String requestTarget) throws HttpParsingException {
+        if (requestTarget == null || requestTarget.isEmpty()) {
+            throw new HttpParsingException(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR);
+        }
+        this.requestResource = requestTarget;
+    }
     @Override
     public String toString() {
         return "Request{" +
@@ -43,8 +48,8 @@ public class Request extends HttpMessage {
         return requestResource;
     }
 
-    public String getRequestProtocol() {
-        return requestProtocol;
+    public HttpVersion getRequestProtocol() {
+        return HttpVersion.fromLiteral(requestProtocol);
     }
 
     /**

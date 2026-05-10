@@ -25,7 +25,7 @@ public class PostLoginHandler extends PostRequestHandler{
             String sessionId = sessionManager.startSession(username);
             byte[] body="login successful".getBytes(StandardCharsets.UTF_8); // placeholder
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
+                    .setHttpVersion(request.getRequestProtocol().getLITERAL())
                     .setStatus(HttpStatus.OK)
                     .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
                             .format(DateTimeFormatter.RFC_1123_DATE_TIME))

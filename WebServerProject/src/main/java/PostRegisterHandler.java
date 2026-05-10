@@ -17,7 +17,7 @@ public class PostRegisterHandler extends PostRequestHandler{
         if (Users.getInstance().addUser(username,password)) {
             byte[] body = "register successful".getBytes();
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
+                    .setHttpVersion(request.getRequestProtocol().getLITERAL())
                     .setStatus(HttpStatus.OK)
                     .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
                             .format(DateTimeFormatter.RFC_1123_DATE_TIME))
@@ -30,7 +30,7 @@ public class PostRegisterHandler extends PostRequestHandler{
         else { // registering failed
             byte[] body = "register failed".getBytes();
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
+                    .setHttpVersion(request.getRequestProtocol().getLITERAL())
                     .setStatus(HttpStatus.OK)
                     .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
                             .format(DateTimeFormatter.RFC_1123_DATE_TIME))

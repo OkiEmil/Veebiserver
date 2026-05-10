@@ -20,7 +20,7 @@ public class DownloadRequestHandler extends RequestHandler {
 
             if (!FileHandler.getInstance().fileExists(resource)) {
                 return new HttpResponseBuilder()
-                        .setHttpVersion(request.getRequestProtocol())
+                        .setHttpVersion(request.getRequestProtocol().getLITERAL())
                         .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
                         .build();
             }
@@ -38,7 +38,7 @@ public class DownloadRequestHandler extends RequestHandler {
         } catch (Exception exception) {
             Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
             return new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol())
+                    .setHttpVersion(request.getRequestProtocol().getLITERAL())
                     .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
                     .build();
         }

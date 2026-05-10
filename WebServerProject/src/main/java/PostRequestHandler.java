@@ -32,21 +32,21 @@ public class PostRequestHandler extends RequestHandler {
                     logger.log(exception.getLocalizedMessage(), true);
 
                     return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, exception.getLocalizedMessage(),
-                                request.getRequestProtocol()).buildResponseFromError();
+                                request.getRequestProtocol().getLITERAL()).buildResponseFromError();
 
                 }
             }
 
 
             return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED,
-                    request.getRequestProtocol()).buildResponseFromError();
+                    request.getRequestProtocol().getLITERAL()).buildResponseFromError();
 
 
         } catch (Exception exception) {
             logger.log(exception.getLocalizedMessage(), true);
 
             return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR, exception.getLocalizedMessage(),
-                    request.getRequestProtocol()).buildResponseFromError();
+                    request.getRequestProtocol().getLITERAL()).buildResponseFromError();
         }
     }
 
