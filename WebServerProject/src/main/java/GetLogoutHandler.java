@@ -14,7 +14,7 @@ public class GetLogoutHandler extends GetRequestHandler{
         }
         byte[] body = "logged out".getBytes();
         HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                .setHttpVersion(request.getRequestProtocol())
+                .setHttpVersion(request.getRequestProtocol().getLITERAL())
                 .setStatus(HttpStatus.OK)
                 .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
                         .format(DateTimeFormatter.RFC_1123_DATE_TIME))

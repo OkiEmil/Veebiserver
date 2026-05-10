@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class ClientHandler implements Runnable {
 
-    private final String CONTINUE = "HTTP/1.1 100 Continue\r\n\r\n";
+
     private final Socket connectionSocket;
     private final WebrootHandler webrootHandler;
     private final SessionManager sessionManager;
@@ -44,11 +44,15 @@ public class ClientHandler implements Runnable {
 
                 try {
 
-                    Request httpRequest = parseRequest(inputStream, outputStream);
+                    HttpParser httpParser = new HttpParser();
+
+                    Request httpRequest = httpParser.parseRequest(inputStream, outputStream);
+                    HttpVersion httpVersion = httpRequest.getRequestProtocol();
 
                     if (httpRequest == null) {
                         break;
-                    } else if ("close".equalsIgnoreCase(httpRequest.getHeader("connection"))) {
+                    } else if ("close".equalsIgnoreCase(httpRequest.getHeader("connection"))
+                            || !httpVersion.allows(HttpVersion.Feature.PERSISTENCE)) {
                         keepConnection = false;
                     }
 
@@ -63,29 +67,31 @@ public class ClientHandler implements Runnable {
                     httpRequest.setSessionState(sessionState);
 
                     Response httpResponse = handleRequest(httpRequest);
-                    //outputStream.write(httpResponse.getResponseAsBytes());
-                    //outputStream.flush();
 
-                    outputStream.write(httpResponse.getHeaderAsBytes());
+                    if (!httpVersion.allows(HttpVersion.Feature.CHUNKING)) {
+                        outputStream.write(httpResponse.getResponseAsBytes());
+                        outputStream.flush();
 
-                    if(httpResponse.getInputStream() != null)
-                    {
-                        InputStream in = httpResponse.getInputStream();
-                        byte[] buffer = new byte[8192];
-                        int bytesRead;
+                    } else {
 
-                        while((bytesRead = in.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, bytesRead);
+                        outputStream.write(httpResponse.getHeaderAsBytes());
+
+                        if (httpResponse.getInputStream() != null) {
+                            InputStream in = httpResponse.getInputStream();
+                            byte[] buffer = new byte[8192];
+                            int bytesRead;
+
+                            while ((bytesRead = in.read(buffer)) != -1) {
+                                outputStream.write(buffer, 0, bytesRead);
+                            }
+
+                            in.close();
+                        } else if (httpResponse.getMessageBody() != null) {
+                            outputStream.write(httpResponse.getMessageBody());
                         }
 
-                        in.close();
+                        outputStream.flush();
                     }
-                    else if(httpResponse.getMessageBody() != null)
-                    {
-                        outputStream.write(httpResponse.getMessageBody());
-                    }
-
-                    outputStream.flush();
 
                 } catch (SocketTimeoutException e){
                     keepConnection = false;
@@ -115,113 +121,16 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private Request parseRequest(BufferedInputStream clientInputStream, OutputStream outputStream) throws IOException, HttpParsingException {
-        HashMap<String, String> requestMap = new HashMap<>();
-        String requestLine = lineFromInputStream(clientInputStream); // the first line of the request
-        // for example POST /contact_form.php HTTP/1.1
-
-        if (requestLine == null || requestLine.trim().isEmpty()) {
-            return null;
-        }
-
-
-        try {
-            String[] requestLineComponents = requestLine.split(" ");
-
-
-                String requestMethod = requestLineComponents[0];
-                String requestResource = requestLineComponents[1];
-                String requestProtocol = requestLineComponents[2];
-                requestMap.put("method", requestMethod);
-                requestMap.put("resource", requestResource);
-                requestMap.put("protocol", requestProtocol);
-
-
-            // the headers
-            String headerLine = lineFromInputStream(clientInputStream);
-            while (!headerLine.isEmpty()) {
-                String[] headerLineComponents = headerLine.split(": ", 2);
-
-                // toLowerCase() is required, since headers are not always of the same case
-                requestMap.put(headerLineComponents[0].toLowerCase(), headerLineComponents[1]);
-
-                headerLine = lineFromInputStream(clientInputStream);
-            }
-
-            String expectHeader = requestMap.get("expect");
-            if (expectHeader != null && expectHeader.equalsIgnoreCase("100-continue")){
-                // Before sending the body sometimes needs a 100-continue
-                outputStream.write(CONTINUE.getBytes(StandardCharsets.ISO_8859_1));
-                outputStream.flush();
-            }
-
-            byte[] bodyBytes = null;
-            // next comes the body (raw byte input stream to handle different types of data like images or forms)
-            String contentLengthString = requestMap.get("content-length");
-            if (contentLengthString != null) {
-                int contentLength = Integer.parseInt(contentLengthString);
-                bodyBytes = new byte[contentLength];
-
-                int alreadyReadBytesAmount = 0;
-                while (alreadyReadBytesAmount < contentLength) {
-                    int readThisTime = clientInputStream.read(bodyBytes, alreadyReadBytesAmount, contentLength-alreadyReadBytesAmount);
-
-                    if (readThisTime == -1) {
-                        break;
-                    }
-                    alreadyReadBytesAmount += readThisTime;
-                }
-
-            }
-            Request httpRequest = new Request(bodyBytes, requestMap);
-            return httpRequest;
-            } catch (Exception e) {
-                throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
-            }
-
-    }
-
-    private String lineFromInputStream(InputStream inputStream) throws IOException {
-        // https://stackoverflow.com/questions/1579823/buffered-reader-http-post
-
-        int byteRead = 0;
-        boolean hasReadAnything = false;
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        while((byteRead = inputStream.read()) != -1) {
-            hasReadAnything = true;
-            if (byteRead == '\r') { // or == 13
-                inputStream.mark(1); // next time read only one byte
-                int nextRead = inputStream.read();
-                if ( nextRead == '\n') {
-                    break;
-                } else {
-                    inputStream.reset(); // reset the mark
-                }
-            }
-            else if (byteRead == '\n') {
-                break;
-            } else {
-                buffer.write(byteRead);
-            }
-        }
-        if (!hasReadAnything) {
-            return null;
-        }
-
-        return buffer.toString(StandardCharsets.ISO_8859_1);
-
-
-    }
-
     public Response handleRequest(Request request) {
         System.out.println("Handling: " + request.getHeader("method") + " method for resource " + request.getRequestResource());
 
         try {
             // The Host: header MUST be included according to the protocol
-            if (request.getHeader("host") == null) {
+
+            if (request.getRequestProtocol().allows(HttpVersion.Feature.HOST_HEADER_REQUIRED) &&  request.getHeader("host") == null) {
                 return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST,
                         "No Host: header received, HTTP 1.1 requests must include the Host: header.",
-                        request.getRequestProtocol()).buildResponseFromError();
+                        request.getRequestProtocol().getLITERAL()).buildResponseFromError();
             }
 
             String method = request.getHeader("method");
@@ -233,10 +142,10 @@ public class ClientHandler implements Runnable {
 
             return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_501_NOT_IMPLEMENTED,
                     "method " + method + " not implemented",
-                    request.getRequestProtocol()).buildResponseFromError();
+                    request.getRequestProtocol().getLITERAL()).buildResponseFromError();
         } catch (Exception e) {
             return new ErrorPageBuilder(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR,
-                    request.getRequestProtocol()).buildResponseFromError();
+                    request.getRequestProtocol().getLITERAL()).buildResponseFromError();
         }
 
     }

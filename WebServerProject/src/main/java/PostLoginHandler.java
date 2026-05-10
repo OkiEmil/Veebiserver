@@ -5,10 +5,10 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PostLoginHandler extends RequestHandler{
+public class PostLoginHandler extends PostRequestHandler{
 
     public PostLoginHandler(WebrootHandler webrootHandler) {
-        super("/login", webrootHandler);
+        super(webrootHandler);
 
     }
 
@@ -24,7 +24,11 @@ public class PostLoginHandler extends RequestHandler{
         if (users.isPasswordCorrect(username,password)) {
             String sessionId = sessionManager.startSession(username);
             byte[] body="login successful".getBytes(StandardCharsets.UTF_8); // placeholder
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
+                    .setHttpVersion(request.getRequestProtocol().getLITERAL())
+                    .setStatus(HttpStatus.OK)
+                    .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
+                            .format(DateTimeFormatter.RFC_1123_DATE_TIME))
                     .addHeader("Set-Cookie", "sessionId=" + sessionId + "; HttpOnly; SameSite=Lax; Path=/") // TODO: when https is implemented add secure flag
                     .addHeader("Content-type", "text/html")
                     .addHeader("Content-length", String.valueOf(body.length))
