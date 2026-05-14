@@ -14,14 +14,13 @@ public class HttpParser {
 
     public Request parseRequest(InputStream inputStream, OutputStream outputStream) throws HttpParsingException {
         HashMap<String, String> requestMap = new HashMap<>();
-        InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.US_ASCII);
         try {
             parseRequestLine(inputStream, requestMap);
         } catch (IOException e) {
             e.printStackTrace();
         }
         try {
-            parseHeaders(reader, requestMap);
+            parseHeaders(inputStream, requestMap);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,43 +70,22 @@ public class HttpParser {
         }
     }
 
-    private void parseHeaders(InputStreamReader reader,HashMap<String, String> requestMap) throws IOException, HttpParsingException {
-        StringBuilder processingDataBuffer = new StringBuilder();
-        boolean crlfFound = false;
+    private void parseHeaders(InputStream inputStream, HashMap<String, String> requestMap) throws IOException, HttpParsingException {
+        String headerLine = lineFromInputStream(inputStream);
+        while (!headerLine.isEmpty()) {
 
-        int _byte;
-        while ((_byte = reader.read()) >=0) {
-            if (_byte == CR) {
-                _byte = reader.read();
-                if (_byte == LF) {
-                    if (!crlfFound) {
-                        crlfFound = true;
+            processSingleHeaderField(headerLine, requestMap);
 
-                        // Do Things like processing
-                        processSingleHeaderField(processingDataBuffer, requestMap);
-                        // Clear the buffer
-                        processingDataBuffer.delete(0, processingDataBuffer.length());
-                    } else {
-                        // Two CRLF received, end of Headers section
-                        return;
-                    }
-                } else {
-                    throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
-                }
-            } else {
-                crlfFound = false;
-
-                processingDataBuffer.append((char)_byte); // add to the string
-            }
+            headerLine = lineFromInputStream(inputStream);
         }
     }
 
-    private void processSingleHeaderField(StringBuilder processingDataBuffer, HashMap<String, String> requestMap) throws HttpParsingException {
-        String rawHeaderField = processingDataBuffer.toString();
+    private void processSingleHeaderField(String line , HashMap<String, String> requestMap) throws HttpParsingException {
+
         // found this regex use online
         Pattern pattern = Pattern.compile("^(?<fieldName>[!#$%&’*+\\-./^_‘|˜\\dA-Za-z]+):\\s?(?<fieldValue>[!#$%&’*+\\-./^_‘|˜(),:;<=>?@[\\\\]{}\" \\dA-Za-z]+)\\s?$");
 
-        Matcher matcher = pattern.matcher(rawHeaderField);
+        Matcher matcher = pattern.matcher(line);
         if (matcher.matches()) {
             // We found a proper header
             String fieldName = matcher.group("fieldName").toLowerCase();
@@ -119,26 +97,30 @@ public class HttpParser {
     }
 
     private byte[] parseBody(InputStream inputStream, HashMap<String, String> requestMap) throws IOException {
-        BufferedInputStream clientInputStream = new BufferedInputStream(inputStream);
-        byte[] bodyBytes = null;
-        // next comes the body (raw byte input stream to handle different types of data like images or forms)
-        String contentLengthString = requestMap.get("content-length");
-        if (contentLengthString != null) {
-            int contentLength = Integer.parseInt(contentLengthString);
-            bodyBytes = new byte[contentLength];
 
-            int alreadyReadBytesAmount = 0;
-            while (alreadyReadBytesAmount < contentLength) {
-                int readThisTime = clientInputStream.read(bodyBytes, alreadyReadBytesAmount, contentLength-alreadyReadBytesAmount);
 
-                if (readThisTime == -1) {
-                    break;
+            byte[] bodyBytes = null;
+            // next comes the body (raw byte input stream to handle different types of data like images or forms)
+            String contentLengthString = requestMap.get("content-length");
+            if (contentLengthString != null) {
+                int contentLength = Integer.parseInt(contentLengthString);
+                bodyBytes = new byte[contentLength];
+
+                int alreadyReadBytesAmount = 0;
+                while (alreadyReadBytesAmount < contentLength) {
+                    System.out.println(alreadyReadBytesAmount);
+                    int readThisTime = inputStream.read(bodyBytes, alreadyReadBytesAmount, contentLength - alreadyReadBytesAmount);
+
+                    if (readThisTime == -1) {
+                        break;
+                    }
+                    alreadyReadBytesAmount += readThisTime;
                 }
-                alreadyReadBytesAmount += readThisTime;
-            }
 
-        }
-        return bodyBytes;
+            }
+            return bodyBytes;
+
+
     }
     private String lineFromInputStream(InputStream inputStream) throws IOException, HttpParsingException {
 
@@ -150,14 +132,14 @@ public class HttpParser {
         int byteRead;
         int totalBytes = 0;
         while ((byteRead = inputStream.read()) != -1) {
-            if (byteRead == 0x0D) {
+            if (byteRead == CR) {
                 int nextRead = inputStream.read();
-                if (nextRead == 0x0A) {
+                if (nextRead == LF) {
                     return buffer.toString(StandardCharsets.US_ASCII);
                 }
                 throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
             }
-            if (byteRead == 0x0A) {
+            if (byteRead == LF) {
                 throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
             }
             if (++totalBytes > maxLength) {
@@ -165,7 +147,7 @@ public class HttpParser {
             }
             buffer.write(byteRead);
         }
-        if (totalBytes == 0) return null;
+        if (totalBytes == 0) return "";
         throw new HttpParsingException(HttpStatus.CLIENT_ERROR_400_BAD_REQUEST);
 
     }

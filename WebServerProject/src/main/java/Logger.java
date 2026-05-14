@@ -23,7 +23,7 @@ public class Logger
     			Files.createDirectories(parentDir);
 			}
 
-			if(Files.exists(Path.of(logPath)))
+			if(!Files.exists(Path.of(logPath)))
 				Files.createFile(logFilePath);
 		}
 		catch(IOException  exception)

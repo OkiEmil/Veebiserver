@@ -4,10 +4,10 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PostRegisterHandler extends PostRequestHandler{
+public class PostRegisterHandler extends RequestHandler{
 
     public PostRegisterHandler(WebrootHandler webrootHandler) {
-        super(webrootHandler);
+        super("/register",webrootHandler);
     }
 
     @Override

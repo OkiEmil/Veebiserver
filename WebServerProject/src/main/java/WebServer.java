@@ -8,7 +8,7 @@ import java.net.Socket;
 public class WebServer {
     public static void main(String[] args) {
 
-        try (ServerSocket serverSocket = new ServerSocket(8080)) {
+        try (ServerSocket serverSocket = new ServerSocket(80)) {
             Users users=Users.getInstance();
             Runtime.getRuntime().addShutdownHook(new Thread(users::saveUsersToFile));
             SessionManager sessionManager = new SessionManager();

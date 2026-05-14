@@ -48,6 +48,7 @@ public class ClientHandler implements Runnable {
 
                     Request httpRequest = httpParser.parseRequest(inputStream, outputStream);
                     HttpVersion httpVersion = httpRequest.getRequestProtocol();
+                    System.out.println(new String(httpRequest.getMessageBody()) + " BODD");
 
                     if (httpRequest == null) {
                         break;
