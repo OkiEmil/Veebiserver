@@ -4,7 +4,7 @@ import java.util.Properties;
 public class ServerConfig {
     private static ServerConfig instance;
     private Properties properties;
-    private final String CONFIG_FILE_PATH = "ServerConfig.ini";
+    private String CONFIG_FILE_PATH = "ServerConfig.ini";
     
     private int serverPort;
     private int sessionTimeout;
