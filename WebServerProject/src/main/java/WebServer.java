@@ -12,6 +12,9 @@ public class WebServer {
             Users users=Users.getInstance();
             Runtime.getRuntime().addShutdownHook(new Thread(users::saveUsersToFile));
             ServerRouter serverrouter = new ServerRouter();
+            RateLimiter rateLimiter = new RateLimiter();
+            ConnectionTracker connectionTracker = new ConnectionTracker();
+
             long last_saved = System.currentTimeMillis();
             while (true) { //just runs forever
                 if (System.currentTimeMillis()-last_saved>600000) { // periodically saves the userdata (every 10 mins)
@@ -20,6 +23,13 @@ public class WebServer {
                 }
                 Socket clientSocket = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(clientSocket,serverrouter);
+
+                if (!connectionTracker.isConnectionOk(clientSocket.getInetAddress().getHostAddress())) {
+                    clientSocket.close();
+                    continue;
+                }
+
+                ClientHandler clientHandler = new ClientHandler(clientSocket,serverrouter, rateLimiter, connectionTracker);
                 new Thread(clientHandler).start();
             }
         } catch (IOException e) {

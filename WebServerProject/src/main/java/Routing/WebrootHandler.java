@@ -53,7 +53,7 @@ public class WebrootHandler {
     }
 
     public byte[] getByteArray(String path) throws FileNotFoundException {
-        System.out.println("HERE!");
+        //System.out.println("HERE!");
         File file = new File(WEBROOTDIR, path);
         if (doesFileOrFolderExist(file) && file.isDirectory()) {
             file = new File(file, "index.html");

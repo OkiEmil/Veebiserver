@@ -8,9 +8,11 @@ public enum HttpStatus {
     CLIENT_ERROR_403_FORBIDDEN(403, "Forbidden"),
     CLIENT_ERROR_404_NOT_FOUND(404, "Not Found" ),
     CLIENT_ERROR_405_METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
+    CLIENT_ERROR_413_PAYLOAD_TOO_LARGE(414, "Request body too large"),
     CLIENT_ERROR_414_BAD_REQUEST(414, "URI Too Long"),
     CLIENT_ERROR_415_UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type"),
-
+    CLIENT_ERROR_429_TOO_MANY_REQUESTS(429, "Too many requests"),
+    CLIENT_ERROR_431_TOO_MANY_HEADERS(431, "Request Header Fields Too Large"),
 
     /* --- SERVER ERRORS --- */
     SERVER_ERROR_500_INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
