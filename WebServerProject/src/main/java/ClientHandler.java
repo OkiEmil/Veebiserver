@@ -1,24 +1,30 @@
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
+
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public class ClientHandler implements Runnable {
 
 
-    private final Socket connectionSocket;
+     private final Socket connectionSocket;
     private final WebrootHandler webrootHandler;
     private final SessionManager sessionManager;
     private final List<RequestHandler> requestHandlers;
+    private final RateLimiter rateLimiter;
+    private final ConnectionTracker connectionTracker;
 
-    public ClientHandler(Socket connectionSocket, SessionManager sessionManager) {
+    public ClientHandler(Socket connectionSocket, SessionManager sessionManager, RateLimiter rateLimiter, ConnectionTracker connectionTracker) {
         this.connectionSocket = connectionSocket;
         this.sessionManager = sessionManager;
+        this.rateLimiter = rateLimiter;
+        this.connectionTracker = connectionTracker;
         this.webrootHandler = new WebrootHandler("public");
         this.requestHandlers = loadRequestHandlers();
     }
@@ -35,11 +41,39 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         OutputStream outputStream = null;
+
         try {
             connectionSocket.setSoTimeout(5000); // end the connection automatically after 5 seconds of not getting anything
             boolean keepConnection = true;
+            String clientIp = connectionSocket.getInetAddress().getHostAddress();
             BufferedInputStream inputStream = new BufferedInputStream(connectionSocket.getInputStream());
             outputStream = connectionSocket.getOutputStream();
+
+            Bucket bucket = rateLimiter.resolveBucket(clientIp);
+            ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+            if (!probe.isConsumed()) {
+                System.out.println("Rate limit exceeded for IP: " + clientIp);
+
+                // Right now always uses HTTP/1.1
+                Response rateLimitResponse = new ErrorPageBuilder(
+                        HttpStatus.CLIENT_ERROR_429_TOO_MANY_REQUESTS,
+                        "You have exceeded allowed rate, slow down mate",
+                        HttpVersion.HTTP_1_1.getLITERAL()
+                ).buildResponseFromError();
+
+                long retryAfterSeconds = probe.getNanosToWaitForRefill() / 1_000_000_000;
+                // Not sure if this adds anything right now, but could be used later
+                rateLimitResponse.addHeader("Retry-After", String.valueOf(retryAfterSeconds));
+
+                outputStream.write(rateLimitResponse.getResponseAsBytes());
+                outputStream.flush();
+
+                keepConnection = false;
+                return;
+            }
+
+
+
             while (keepConnection) {
 
                 try {
@@ -48,7 +82,6 @@ public class ClientHandler implements Runnable {
 
                     Request httpRequest = httpParser.parseRequest(inputStream, outputStream);
                     HttpVersion httpVersion = httpRequest.getRequestProtocol();
-                    System.out.println(new String(httpRequest.getMessageBody()) + " BODD");
 
                     if (httpRequest == null) {
                         break;
@@ -56,6 +89,7 @@ public class ClientHandler implements Runnable {
                             || !httpVersion.allows(HttpVersion.Feature.PERSISTENCE)) {
                         keepConnection = false;
                     }
+
 
                     // cookies session into sessionstate
                     Map<String,String> cookies = httpRequest.getCookies();
@@ -114,6 +148,8 @@ public class ClientHandler implements Runnable {
             }
         }
         finally {
+            String clientIp = connectionSocket.getInetAddress().getHostAddress();
+            connectionTracker.untrackConnection(clientIp);
             try {
                 this.connectionSocket.close();
             } catch (IOException ignored) {

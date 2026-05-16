@@ -72,11 +72,20 @@ public class HttpParser {
 
     private void parseHeaders(InputStream inputStream, HashMap<String, String> requestMap) throws IOException, HttpParsingException {
         String headerLine = lineFromInputStream(inputStream);
+        int maxHeaderCount = 100;
+
+        int headerCounter = 0;
         while (!headerLine.isEmpty()) {
+
+            if (headerCounter > maxHeaderCount) {
+                throw new HttpParsingException(HttpStatus.CLIENT_ERROR_431_TOO_MANY_HEADERS);
+            }
 
             processSingleHeaderField(headerLine, requestMap);
 
             headerLine = lineFromInputStream(inputStream);
+            headerCounter++;
+
         }
     }
 
@@ -96,14 +105,18 @@ public class HttpParser {
         }
     }
 
-    private byte[] parseBody(InputStream inputStream, HashMap<String, String> requestMap) throws IOException {
+    private byte[] parseBody(InputStream inputStream, HashMap<String, String> requestMap) throws IOException, HttpParsingException {
 
+        int maxAllowedBody = 10 * 1024 * 1024; // this is 10 megabytes
 
             byte[] bodyBytes = null;
             // next comes the body (raw byte input stream to handle different types of data like images or forms)
             String contentLengthString = requestMap.get("content-length");
             if (contentLengthString != null) {
                 int contentLength = Integer.parseInt(contentLengthString);
+                if (contentLength > maxAllowedBody) {
+                    throw new HttpParsingException(HttpStatus.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
+                }
                 bodyBytes = new byte[contentLength];
 
                 int alreadyReadBytesAmount = 0;
