@@ -22,7 +22,6 @@ public class WebServer {
                     last_saved=System.currentTimeMillis();
                 }
                 Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket,serverrouter);
 
                 if (!connectionTracker.isConnectionOk(clientSocket.getInetAddress().getHostAddress())) {
                     clientSocket.close();
