@@ -1,3 +1,5 @@
+package Routing;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,17 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class WebrootHandler {
     private final File WEBROOTDIR;
     private boolean isDirectoryListing = true;
+    private final String routePrefix;
 
-    public WebrootHandler(String webrootLoc) {
+    public WebrootHandler(String webrootLoc,String routePrefix) {
         File webrootFolder = new File(webrootLoc);
-
+        this.routePrefix=routePrefix;
 
         if (webrootFolder.exists() && webrootFolder.isDirectory()) {
             WEBROOTDIR = webrootFolder;
@@ -27,7 +27,7 @@ public class WebrootHandler {
 
     }
 
-    public String getCorrectPath(String path) throws FileNotFoundException {
+    public String getCorrectPath(String path) {
         System.out.println(path + "HEREE");
         File file = new File(WEBROOTDIR, path);
         if (file.isDirectory()) {
@@ -36,8 +36,8 @@ public class WebrootHandler {
             }
 
         }
-        System.out.println("New path: " + WEBROOTDIR + path);
-        return WEBROOTDIR + path;
+        System.out.println("New path: " + WEBROOTDIR + "\\" +  path);
+        return WEBROOTDIR + "\\" + path;
     }
 
     public boolean doesFileOrFolderExist (File fileToCheck) {
@@ -79,6 +79,7 @@ public class WebrootHandler {
     private byte[] getDirectoryListing(File folder) {
 
         Path path = folder.toPath();
+        System.out.println("path: " + path.toString());
         // https://codereview.stackexchange.com/questions/117451/scanning-a-directory-and-listing-contents-in-an-html-file
         StringBuilder html = new StringBuilder();
         try {
@@ -91,9 +92,14 @@ public class WebrootHandler {
                         if (Files.isDirectory(p)) {
                             name += "/";
                         }
+                        String requestPathFinal = routePrefix;
+                        if (!requestPathFinal.endsWith("/")) {
+                            requestPathFinal+="/";
+                        }
+                        requestPathFinal+=name;
                         try {
                             html.append("\t\t\t<li> <a href=\"")
-                                    .append(name)
+                                    .append(requestPathFinal)
                                     .append("\">")
                                     .append(name)
                                     .append("</a>")

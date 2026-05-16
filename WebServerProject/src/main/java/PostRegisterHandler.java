@@ -1,13 +1,11 @@
+import Routing.Router;
+import Routing.WebrootHandler;
 import UserManagement.Users;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class PostRegisterHandler extends RequestHandler{
 
-    public PostRegisterHandler(WebrootHandler webrootHandler) {
-        super("/register",webrootHandler);
+    public PostRegisterHandler(Router router) {
+        super("/register",router);
     }
 
     @Override

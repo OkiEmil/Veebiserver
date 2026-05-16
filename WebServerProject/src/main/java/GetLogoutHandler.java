@@ -1,10 +1,8 @@
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import Routing.Router;
 
-public class GetLogoutHandler extends GetRequestHandler{
-    public GetLogoutHandler(WebrootHandler webrootHandler) {
-        super(webrootHandler);
+public class GetLogoutHandler extends RequestHandler{
+    public GetLogoutHandler(Router router) {
+        super("/logout",router);
     }
     @Override
     protected Response handleRequest(Request request, SessionManager sessionManager) {
@@ -13,11 +11,7 @@ public class GetLogoutHandler extends GetRequestHandler{
             sessionManager.endSession(sessionState.getSessionId());
         }
         byte[] body = "logged out".getBytes();
-        HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                .setHttpVersion(request.getRequestProtocol().getLITERAL())
-                .setStatus(HttpStatus.OK)
-                .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
-                        .format(DateTimeFormatter.RFC_1123_DATE_TIME))
+        HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
                 .addHeader("Set-Cookie", "sessionId=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/") // deletes session cookie
                 .addHeader("Content-type", "text/html")
                 .addHeader("Content-length", String.valueOf(body.length))

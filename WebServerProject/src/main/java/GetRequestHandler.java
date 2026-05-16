@@ -1,14 +1,17 @@
-import java.io.IOException;
+import Routing.Route;
+import Routing.Router;
+import Routing.WebrootHandler;
+import UserManagement.Users;
 
 // TODO: add logging
 
 public class GetRequestHandler extends RequestHandler {
-
+    private final Router router;
     //Logger logger;
 
-    public GetRequestHandler(WebrootHandler webrootHandler) {
-        super("GET", webrootHandler);
-
+    public GetRequestHandler(Router router) {
+        super("GET", null);
+        this.router=router;
         //logger = new Logger("GetRequestHandler");
     }
 
@@ -21,9 +24,31 @@ public class GetRequestHandler extends RequestHandler {
 
         try {
             if (request.getRequestResource().equalsIgnoreCase("/logout")) {
-                return new GetLogoutHandler(this.getWEBROOT_HANDLER()).handleRequest(request,sessionManager);
+                return new GetLogoutHandler(null).handleRequest(request,sessionManager);
             }
-            String resource= getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
+            System.out.println("resource to find route by: " + request.getRequestResource());
+            Route route = router.resolve(request.getRequestResource());
+            if (route == null) {
+                return new ErrorPageBuilder(
+                        HttpStatus.CLIENT_ERROR_404_NOT_FOUND,
+                        "Route not found",
+                        request.getRequestProtocol().getLITERAL())
+                        .buildResponseFromError();
+            }
+            System.out.println("accesslevel: " + route.getAccessLevel());
+            if (route.getAccessLevel()>0) {
+                String username = request.getSessionState().getUsername();
+                if (username==null || Users.getInstance().findUser(username).getAccessLevel() < route.getAccessLevel()) {
+                    return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_403_FORBIDDEN, "Forbidden",
+                            request.getRequestProtocol().getLITERAL()).buildResponseFromError();
+                }
+            }
+            String relativePath = request.getRequestResource().substring(route.getPathPrefix().length());
+            if (relativePath.isEmpty()) {
+                relativePath = "/";
+            }
+            WebrootHandler webrootHandler = route.getWebrootHandler();
+            String resource= webrootHandler.getCorrectPath(relativePath);
             if (!FileHandler.getInstance().fileExists(resource)) {
                 return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_404_NOT_FOUND, "file at path " + resource +" was not found",
                         request.getRequestProtocol().getLITERAL()).buildResponseFromError();
@@ -32,7 +57,7 @@ public class GetRequestHandler extends RequestHandler {
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request, sessionManager))
                     .addHeader("Content-type", FileHandler.getInstance().getMimeType(resource))
                     .addHeader("Content-length", String.valueOf(FileHandler.getInstance().getFileSize(resource)))
-                    .setBody(getWEBROOT_HANDLER().getByteArray(request.getRequestResource())); // PLACEHOLDER
+                    .setBody(webrootHandler.getByteArray(relativePath));
 
             return responseBuilder.build();
 

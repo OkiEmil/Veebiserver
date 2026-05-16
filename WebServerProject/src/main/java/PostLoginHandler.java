@@ -1,3 +1,5 @@
+import Routing.Router;
+import Routing.WebrootHandler;
 import UserManagement.Users;
 
 import java.nio.charset.StandardCharsets;
@@ -5,11 +7,10 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PostLoginHandler extends PostRequestHandler{
+public class PostLoginHandler extends RequestHandler{
 
-    public PostLoginHandler(WebrootHandler webrootHandler) {
-        super(webrootHandler);
-
+    public PostLoginHandler(Router router) {
+        super("/login",router);
     }
 
     @Override
@@ -24,11 +25,7 @@ public class PostLoginHandler extends PostRequestHandler{
         if (users.isPasswordCorrect(username,password)) {
             String sessionId = sessionManager.startSession(username);
             byte[] body="login successful".getBytes(StandardCharsets.UTF_8); // placeholder
-            HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
-                    .setHttpVersion(request.getRequestProtocol().getLITERAL())
-                    .setStatus(HttpStatus.OK)
-                    .addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
-                            .format(DateTimeFormatter.RFC_1123_DATE_TIME))
+            HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request,sessionManager))
                     .addHeader("Set-Cookie", "sessionId=" + sessionId + "; HttpOnly; SameSite=Lax; Path=/") // TODO: when https is implemented add secure flag
                     .addHeader("Content-type", "text/html")
                     .addHeader("Content-length", String.valueOf(body.length))

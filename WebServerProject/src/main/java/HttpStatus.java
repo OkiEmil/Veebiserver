@@ -5,6 +5,7 @@ public enum HttpStatus {
 
     /* --- CLIENT ERRORS --- */
     CLIENT_ERROR_400_BAD_REQUEST(400, "Bad Request"),
+    CLIENT_ERROR_403_FORBIDDEN(403, "Forbidden"),
     CLIENT_ERROR_404_NOT_FOUND(404, "Not Found" ),
     CLIENT_ERROR_405_METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
     CLIENT_ERROR_414_BAD_REQUEST(414, "URI Too Long"),

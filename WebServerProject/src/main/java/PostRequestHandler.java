@@ -1,5 +1,7 @@
+import Routing.Router;
+import Routing.WebrootHandler;
+
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -8,21 +10,21 @@ public class PostRequestHandler extends RequestHandler {
     Logger logger;
     private final Map<String, Supplier<RequestHandler>> IMPLEMENTED_RESOURCES;
 
-    public PostRequestHandler(WebrootHandler webrootHandler)
+    public PostRequestHandler(Router router)
     {
-        super("POST", webrootHandler);
+        super("POST", router);
         logger = new Logger("PostRequestHandler");
 
         IMPLEMENTED_RESOURCES = Map.of(
-                "public/login", () -> new PostLoginHandler(webrootHandler),
-                "public/register", () -> new PostRegisterHandler(webrootHandler)
+                "/login", () -> new PostLoginHandler(null),
+                "/register", () -> new PostRegisterHandler(null)
         );
     }
 
     @Override
     protected Response handleRequest(Request request, SessionManager sessionManager) {
         try {
-            String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
+            String resource = request.getRequestResource();
 
             if (IMPLEMENTED_RESOURCES.containsKey(resource)) {
                 try {
@@ -52,9 +54,7 @@ public class PostRequestHandler extends RequestHandler {
 
     @Override
     public boolean canHandle(Request request) {
-        try {
-            return "POST".equalsIgnoreCase(request.getRequestMethod()) && IMPLEMENTED_RESOURCES
-                    .containsKey(getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource()));
-        } catch (FileNotFoundException e) {return false;}
+        return "POST".equalsIgnoreCase(request.getRequestMethod()) && IMPLEMENTED_RESOURCES
+                .containsKey(request.getRequestResource());
     }
 }

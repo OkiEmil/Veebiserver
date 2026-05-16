@@ -1,4 +1,6 @@
-import java.sql.SQLOutput;
+import Routing.Router;
+import Routing.WebrootHandler;
+
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -6,11 +8,11 @@ import java.time.format.DateTimeFormatter;
 public abstract class RequestHandler {
 
     private final String HANDLER_METHOD;
-    private final WebrootHandler WEBROOT_HANDLER;
+    private final Router ROUTER;
 
-    public RequestHandler(String handlerMethod, WebrootHandler webrootHandler) {
+    public RequestHandler(String handlerMethod, Router router) {
         this.HANDLER_METHOD = handlerMethod;
-        this.WEBROOT_HANDLER = webrootHandler;
+        this.ROUTER = router;
     }
 
     protected Response handleRequest(Request request, SessionManager sessionManager) {
@@ -25,8 +27,8 @@ public abstract class RequestHandler {
         return request.getRequestMethod().equalsIgnoreCase(HANDLER_METHOD);
     }
 
-    public WebrootHandler getWEBROOT_HANDLER() {
-        return WEBROOT_HANDLER;
+    public Router getRouter() {
+        return this.ROUTER;
     }
 
     private String getDateTime() {

@@ -1,13 +1,17 @@
+import Routing.Route;
+import Routing.Router;
+import Routing.WebrootHandler;
+import UserManagement.Users;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class DownloadRequestHandler extends RequestHandler {
     //Logger logger;
 
-    public DownloadRequestHandler(WebrootHandler webrootHandler) {
-        super("DOWNLOAD", webrootHandler);
+    public DownloadRequestHandler(Router router) {
+        super("DOWNLOAD", router);
 
         //logger = new Logger("DownloadRequestHandler");
     }
@@ -16,15 +20,25 @@ public class DownloadRequestHandler extends RequestHandler {
     protected Response handleRequest(Request request,SessionManager sessionManager) {
         Logger.logStatic(ENamedStaticLogger.REQUEST_DOWNLOAD, "Trying to handle download reequest.", true);
         try {
-            String resource = getWEBROOT_HANDLER().getCorrectPath(request.getRequestResource());
+            Route route = getRouter().resolve(request.getRequestResource());
 
-            if (!FileHandler.getInstance().fileExists(resource)) {
-                return new HttpResponseBuilder()
-                        .setHttpVersion(request.getRequestProtocol().getLITERAL())
-                        .setStatus(HttpStatus.CLIENT_ERROR_404_NOT_FOUND)
-                        .build();
+            if (route==null) {
+                return errorNotFound(request);
             }
-
+            if (Users.getInstance().findUser(request.getSessionState().getUsername()).getAccessLevel() < route.getAccessLevel()) {
+                return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_403_FORBIDDEN, "Forbidden",
+                        request.getRequestProtocol().getLITERAL()).buildResponseFromError();
+            }
+            String relativePath = request.getRequestResource().substring(route.getPathPrefix().length());
+            if (relativePath.isEmpty()) {
+                return errorNotFound(request);
+            }
+            WebrootHandler webrootHandler = route.getWebrootHandler();
+            String resource= webrootHandler.getCorrectPath(relativePath);
+            if (!FileHandler.getInstance().fileExists(resource)) {
+                return new ErrorPageBuilder(HttpStatus.CLIENT_ERROR_404_NOT_FOUND, "file at path " + resource +" was not found",
+                        request.getRequestProtocol().getLITERAL()).buildResponseFromError();
+            }
             File file = new File(resource);
             InputStream inputStream = new FileInputStream(file);
 
@@ -42,6 +56,13 @@ public class DownloadRequestHandler extends RequestHandler {
                     .setStatus(HttpStatus.SERVER_ERROR_500_INTERNAL_SERVER_ERROR)
                     .build();
         }
+    }
+    private Response errorNotFound(Request request) {
+        return new ErrorPageBuilder(
+                HttpStatus.CLIENT_ERROR_404_NOT_FOUND,
+                "Route not found",
+                request.getRequestProtocol().getLITERAL())
+                .buildResponseFromError();
     }
 
 

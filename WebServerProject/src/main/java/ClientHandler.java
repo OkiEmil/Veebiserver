@@ -1,10 +1,10 @@
+import Routing.WebrootHandler;
+
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,25 +12,14 @@ public class ClientHandler implements Runnable {
 
 
     private final Socket connectionSocket;
-    private final WebrootHandler webrootHandler;
-    private final SessionManager sessionManager;
-    private final List<RequestHandler> requestHandlers;
+    private final ServerRouter serverRouter;
 
-    public ClientHandler(Socket connectionSocket, SessionManager sessionManager) {
+    public ClientHandler(Socket connectionSocket, ServerRouter serverRouter) {
         this.connectionSocket = connectionSocket;
-        this.sessionManager = sessionManager;
-        this.webrootHandler = new WebrootHandler("public");
-        this.requestHandlers = loadRequestHandlers();
+        this.serverRouter = serverRouter;
     }
 
-    private List<RequestHandler> loadRequestHandlers() {
-        return Arrays.asList(
-                new GetRequestHandler(webrootHandler),
-                new HeadRequestHandler(webrootHandler),
-                new DownloadRequestHandler(webrootHandler),
-                new PostRequestHandler(webrootHandler)
-        );
-    }
+
 
     @Override
     public void run() {
@@ -62,7 +51,7 @@ public class ClientHandler implements Runnable {
                     String sessionId=cookies.get("sessionid");
                     String username;
                     if (sessionId!=null) {
-                        username = sessionManager.getUsername(sessionId);
+                        username = serverRouter.getSessionManager().getUsername(sessionId);
                     } else username=null;
                     SessionState sessionState = new SessionState(username,sessionId);
                     httpRequest.setSessionState(sessionState);
@@ -135,9 +124,9 @@ public class ClientHandler implements Runnable {
             }
 
             String method = request.getHeader("method");
-            for (RequestHandler requestHandler : this.requestHandlers) {
+            for (RequestHandler requestHandler : this.serverRouter.getHandlers()) {
                 if (requestHandler.canHandle(request)) {
-                    return requestHandler.handleRequest(request, this.sessionManager);
+                    return requestHandler.handleRequest(request, this.serverRouter.getSessionManager());
                 }
             }
 

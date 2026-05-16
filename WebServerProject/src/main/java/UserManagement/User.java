@@ -16,14 +16,17 @@ public class User implements Serializable {
     private String hashedPassword;
     @JsonProperty("createdAt")
     private long createdAt;
+    @JsonProperty("accessLevel")
+    private int accessLevel;
 
     public User() {}
 
     public User(String username,String salt,String hashedPassword) {
-        this.username=username;
-        this.salt=salt;
-        this.hashedPassword=hashedPassword;
-        this.createdAt= System.currentTimeMillis();
+        this.username = username;
+        this.salt = salt;
+        this.hashedPassword = hashedPassword;
+        this.createdAt = System.currentTimeMillis();
+        this.accessLevel = 0;
     }
     public String getUsername() {
         return username;
@@ -59,6 +62,14 @@ public class User implements Serializable {
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getAccessLevel() {
+        return accessLevel;
+    }
+
+    public void setAccessLevel(int accessLevel) {
+        this.accessLevel = accessLevel;
     }
 
     @Override
