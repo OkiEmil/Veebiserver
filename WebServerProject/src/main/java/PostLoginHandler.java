@@ -7,8 +7,11 @@ import java.time.format.DateTimeFormatter;
 
 public class PostLoginHandler extends PostRequestHandler{
 
+    private Logger logger;
+
     public PostLoginHandler(WebrootHandler webrootHandler) {
         super(webrootHandler);
+        this.logger = new Logger(ServerConfig.getInstance().readPropertyAsString("log.directory" + "/Authentication"));
 
     }
 
@@ -16,6 +19,7 @@ public class PostLoginHandler extends PostRequestHandler{
     protected Response handleRequest(Request request, SessionManager sessionManager) {
         SessionState sessionState=request.getSessionState();
         if (sessionState.getUsername()!=null) { // if the user is already logged in logs them out
+            logger.log("User '" + sessionState.getUsername() + "' logged out (forced re-login)", true);
             sessionManager.endSession(sessionState.getSessionId());
         }
         String username = request.getParameter("username");
@@ -23,6 +27,10 @@ public class PostLoginHandler extends PostRequestHandler{
         Users users = Users.getInstance();
         if (users.isPasswordCorrect(username,password)) {
             String sessionId = sessionManager.startSession(username);
+
+            logger.log("LOGIN SUCCESSFUL - User: " + username, true);
+            logger.log("Session ID: " + sessionId, false);
+
             byte[] body="login successful".getBytes(StandardCharsets.UTF_8); // placeholder
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder()
                     .setHttpVersion(request.getRequestProtocol().getLITERAL())
@@ -37,6 +45,8 @@ public class PostLoginHandler extends PostRequestHandler{
             return responseBuilder.build();
         }
         else { // login failed
+
+            logger.log("✗ LOGIN FAILED - User: " + username + " (wrong password)", true);
             byte[] body="login failed".getBytes(); // placeholder
             HttpResponseBuilder responseBuilder = new HttpResponseBuilder(super.handleRequest(request, sessionManager))
                     .addHeader("Content-type", "text/html")

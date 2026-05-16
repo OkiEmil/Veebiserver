@@ -80,7 +80,7 @@ public class ClientHandler implements Runnable {
 
                         if (httpResponse.getInputStream() != null) {
                             InputStream in = httpResponse.getInputStream();
-                            int bufferSize = ServerConfig.getInstance().readPropertyAsInt("buffersize");
+                            int bufferSize = ServerConfig.getInstance().readPropertyAsInt("download.buffersize");
                             byte[] buffer = new byte[bufferSize];
                             //byte[] buffer = new byte[8192];
                             int bytesRead;
