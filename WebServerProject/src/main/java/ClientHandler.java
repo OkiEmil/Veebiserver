@@ -36,7 +36,8 @@ public class ClientHandler implements Runnable {
     public void run() {
         OutputStream outputStream = null;
         try {
-            connectionSocket.setSoTimeout(5000); // end the connection automatically after 5 seconds of not getting anything
+            connectionSocket.setSoTimeout(ServerConfig.getInstance().getSessionTimeout());
+            //connectionSocket.setSoTimeout(5000); // end the connection automatically after 5 seconds of not getting anything
             boolean keepConnection = true;
             BufferedInputStream inputStream = new BufferedInputStream(connectionSocket.getInputStream());
             outputStream = connectionSocket.getOutputStream();
@@ -79,7 +80,9 @@ public class ClientHandler implements Runnable {
 
                         if (httpResponse.getInputStream() != null) {
                             InputStream in = httpResponse.getInputStream();
-                            byte[] buffer = new byte[8192];
+                            int bufferSize = ServerConfig.getInstance().readPropertyAsInt("buffersize");
+                            byte[] buffer = new byte[bufferSize];
+                            //byte[] buffer = new byte[8192];
                             int bytesRead;
 
                             while ((bytesRead = in.read(buffer)) != -1) {
